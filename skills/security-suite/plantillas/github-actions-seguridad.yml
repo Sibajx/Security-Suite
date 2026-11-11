@@ -1,0 +1,45 @@
+# Copiar a .github/workflows/seguridad.yml
+# Corre en cada push/PR y cada lunes: secretos (historial completo), análisis estático y dependencias.
+name: seguridad
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 14 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  secretos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  estatico:
+    runs-on: ubuntu-latest
+    container: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - run: semgrep scan --config p/owasp-top-ten --config p/secrets --metrics=off --error
+
+  dependencias:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python
+        if: hashFiles('**/requirements*.txt') != ''
+        run: |
+          pipx install pip-audit
+          for f in $(git ls-files '*requirements*.txt'); do pip-audit -r "$f" --disable-pip --no-deps; done
+      - name: JavaScript
+        if: hashFiles('**/package-lock.json') != ''
+        run: |
+          for f in $(git ls-files '*package-lock.json'); do (cd "$(dirname "$f")" && npm audit --omit=dev --audit-level=high); done

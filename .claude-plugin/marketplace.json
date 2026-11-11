@@ -1,0 +1,14 @@
+{
+  "name": "security-suite",
+  "owner": {
+    "name": "Sibajx"
+  },
+  "plugins": [
+    {
+      "name": "security-suite",
+      "source": "./",
+      "description": "Suite de ciberseguridad full stack: auditoría, secretos, dependencias, pentest autorizado y tratamiento."
+    }
+  ],
+  "description": "Suite de ciberseguridad full stack para Claude Code: auditoría, pentest autorizado y tratamiento."
+}

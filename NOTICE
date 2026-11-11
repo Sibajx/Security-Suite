@@ -1,0 +1,8 @@
+security-suite
+Copyright (c) 2026 Sibajx — MIT (ver LICENSE).
+
+skills/security-suite/owasp/ contiene material de getsentry/skills (skill "security-review"),
+Copyright Functional Software, Inc. dba Sentry, bajo Apache License 2.0
+(texto completo en skills/security-suite/owasp/LICENSE-sentry), derivado a su vez del
+OWASP Cheat Sheet Series (CC BY-SA 4.0, https://cheatsheetseries.owasp.org/).
+Fuente: https://github.com/getsentry/skills/tree/main/skills/security-review

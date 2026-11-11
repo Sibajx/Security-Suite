@@ -1,0 +1,14 @@
+# Copia este archivo a ~/.config/security-suite/autorizados.yml y pon SOLO dominios que son tuyos
+# o para los que tienes autorización escrita del dueño. Ver reglas-de-enfrentamiento.md.
+dominios:
+  - host: midominio.com
+    incluir_subdominios: false
+    entorno: produccion        # local | staging | produccion
+    nivel_max: 1               # 1 pasivo · 2 confirmación · 3 ataque controlado
+    notas: ""                  # p. ej. "no enviar WhatsApp reales", "datos reales: no tocar pedidos"
+    # Opcional: NOMBRES de variables de entorno (los valores nunca van aquí)
+    # cuentas: {usuario_a: TOKEN_A, usuario_b: TOKEN_B, admin: TOKEN_ADMIN}
+    # access_service_token: {id: CF_ACCESS_CLIENT_ID, secreto: CF_ACCESS_CLIENT_SECRET}
+  - host: staging.midominio.com
+    entorno: staging
+    nivel_max: 3

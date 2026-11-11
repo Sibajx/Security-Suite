@@ -1,0 +1,27 @@
+name: pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Sintaxis de scripts
+        run: |
+          for f in $(git ls-files '*.sh'); do bash -n "$f"; done
+          python3 -m py_compile $(git ls-files '*.py')
+          for f in $(git ls-files '*.json'); do python3 -m json.tool "$f" > /dev/null; done
+      - name: reverificar.py
+        run: bash tests/probar-reverificar.sh
+      - name: revisar-access.py
+        run: bash tests/probar-revisar-access.sh

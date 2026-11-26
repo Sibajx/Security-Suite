@@ -2,7 +2,7 @@
 
 Eres un revisor escéptico (abogado del diablo). Tu trabajo es **intentar desmentir** cada hallazgo CRÍTICA/ALTA
 que el pentester **no** confirmó en vivo, para que el reporte final no tenga falsos positivos ni severidades infladas.
-Lee `SKILL/agentes/_contrato.md` y `SKILL/SecurityChecks.md`.
+Lee `SKILL/agentes/_contrato.md` y, para las severidades, `python3 SKILL/scripts/chequeos.py <ids de los hallazgos>`.
 
 ## Pasos
 

@@ -1,0 +1,31 @@
+{
+  "_nota": "Hoja de respuestas de tests/crear-fixture-next.sh para tests/calificar.py (--esperado tests/esperado-next.json). Fixture solo estático: Next.js 14 + Supabase + Stripe + OpenAI, como lo genera una herramienta de IA. Tabla legible en tests/esperado.md.",
+  "fallas": [
+    {"id": "N01", "titulo": "service_role en variable pública y en el cliente", "patrones": ["NEXT_PUBLIC_SUPABASE_SERVICE_ROLE", "service.?role[^\\n]{0,120}(navegador|bundle|cliente|p[uú]blic)"]},
+    {"id": "N02", "titulo": ".env.local en el historial de git", "patrones": ["\\.env\\.local[^\\n]{0,80}(historial|commit)", "(historial|commit)[^\\n]{0,80}\\.env\\.local"]},
+    {"id": "N03", "titulo": "tabla pedidos sin RLS", "patrones": ["pedidos[^\\n]{0,80}(sin RLS|row level security)", "(sin RLS|row level security)[^\\n]{0,80}pedidos"]},
+    {"id": "N04", "titulo": "mensajes: using(true) para cualquier usuario", "patrones": ["mensajes[^\\n]{0,120}(using \\(true\\)|cualquier usuario|todos)", "pol[ií]tica[^\\n]{0,40}mensajes"]},
+    {"id": "N05", "titulo": "rol desde user_metadata", "patrones": ["user_metadata"]},
+    {"id": "N06", "titulo": "/admin protegido solo en el navegador", "patrones": ["/admin[^\\n]{0,120}(navegador|cliente|front|use client)", "(navegador|cliente|front)[^\\n]{0,80}/admin", "admin/page\\.tsx"]},
+    {"id": "N07", "titulo": "precio desde el body en el checkout", "patrones": ["unit_amount", "precio[^\\n]{0,80}(body|cliente|petici)", "api/checkout"]},
+    {"id": "N08", "titulo": "webhook de Stripe sin firma", "patrones": ["webhooks?/stripe", "constructEvent", "webhook[^\\n]{0,80}(sin firma|no verifica)"]},
+    {"id": "N09", "titulo": "IDOR en /api/pedidos/[id] con service_role", "patrones": ["api/pedidos/\\[?id\\]?[^\\n]{0,120}(IDOR|due[ñn]o|ajeno|BOLA|cualquiera)", "(IDOR|BOLA)[^\\n]{0,60}pedidos"]},
+    {"id": "N10", "titulo": "OTP con Math.random y sin límite de intentos", "patrones": ["Math\\.random", "(OTP|c[oó]digo)[^\\n]{0,120}(intentos|fuerza bruta)"]},
+    {"id": "N11", "titulo": "código interno en el system prompt", "patrones": ["CUPON-STAFF", "system prompt[^\\n]{0,80}(c[oó]digo|descuento|secreto)"]},
+    {"id": "N12", "titulo": "respuesta del LLM con dangerouslySetInnerHTML", "patrones": ["dangerouslySetInnerHTML", "Chat\\.tsx"]},
+    {"id": "N13", "titulo": "open redirect en /api/salir", "patrones": ["open redirect", "redirecci[oó]n abierta", "api/salir"]},
+    {"id": "N14", "titulo": "subida con nombre y tipo del cliente a bucket público", "patrones": ["api/subir", "(subida|upload|bucket)[^\\n]{0,120}(nombre|tipo|p[uú]blic|upsert)"]},
+    {"id": "N15", "titulo": "canjear_cupon: carrera y security definer sin search_path", "patrones": ["canjear_cupon", "search_path"]},
+    {"id": "N16", "titulo": "Next.js 14.1.0 con CVE (bypass de middleware) y source maps en producción", "patrones": ["next@?\\s?14\\.1", "CVE-2025-29927", "productionBrowserSourceMaps", "source ?maps"]},
+    {"id": "N17", "titulo": "sin headers de seguridad", "patrones": ["(headers|cabeceras) de seguridad", "Content-Security-Policy", "\\bCSP\\b"]}
+  ],
+  "preguntas": [
+    {"id": "N18", "titulo": "respaldos, logs y topes de gasto como preguntas", "patrones": ["❓[^\\n]{0,60}(respaldo|X12)", "❓[^\\n]{0,60}(log|X6)", "❓[^\\n]{0,60}(tope|gasto|12)"]}
+  ],
+  "trampas": [
+    {"id": "NT1", "titulo": "profiles con auth.uid() = id", "patrones": ["profiles"]},
+    {"id": "NT2", "titulo": "catálogo productos público a propósito", "patrones": ["productos[^\\n]{0,80}using \\(true\\)", "catalogo publico"]},
+    {"id": "NT3", "titulo": "webhook de Lemon Squeezy con HMAC y timingSafeEqual", "patrones": ["webhooks?/lemon", "Lemon"]},
+    {"id": "NT4", "titulo": "anon key en el bundle (es pública por diseño)", "patrones": ["ANON_KEY[^\\n]{0,80}(expuesta|filtrad|secreto)"]}
+  ]
+}

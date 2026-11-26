@@ -27,3 +27,13 @@ jobs:
         run: bash tests/probar-revisar-access.sh
       - name: webhook-falso.py y chatbot-inyeccion.py
         run: bash tests/probar-webhook-chatbot.sh
+      - name: supabase-rls.py
+        run: bash tests/probar-supabase-rls.sh
+      - name: calificar.py
+        run: bash tests/probar-calificar.sh
+      - name: chequeos.py, resumir-escaneo.py y cambios-desde.py
+        run: bash tests/probar-utilidades.sh
+      - name: Reglas propias de semgrep
+        run: |
+          python3 -m pip install --quiet semgrep==1.187.0
+          bash tests/probar-semgrep.sh

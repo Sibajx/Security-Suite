@@ -1,5 +1,8 @@
 # Mejores implementaciones (catálogo de la suite)
 
+Plantillas por stack: FastAPI → `plantillas/fastapi_seguridad.py` · Next.js + Supabase + Stripe →
+`plantillas/nextjs-supabase.md` · Express → `plantillas/express.md` · varios → `plantillas/otros.md`.
+
 De aquí sale la sección "Tratamiento" del reporte. Recomienda **solo lo que aplica al stack detectado**, ordenado
 por impacto/esfuerzo, y apunta a la plantilla lista cuando exista.
 

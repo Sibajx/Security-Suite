@@ -62,6 +62,8 @@ In Claude Code, inside your project:
 - *"quick review, I built the app with Lovable"* → `rapido-ia` mode: the 15 typical attacks on an AI-built app, ordered
   by damage (open Supabase/Firebase database, keys in the bundle, IDOR, editable price, fake webhook, parallel coupon,
   OTP brute force, chatbot injection…), scored X/15. See [`rapido-app-ia.md`](skills/security-suite/rapido-app-ia.md)
+- *"check what I changed since the last audit"* → `incremental` mode: only re-runs the agents for the areas that
+  changed (`cambios-desde.py`) and inherits the rest from the last full report
 - *"I fixed it, check again"* → re-verification of every finding
 
 Reports are saved **on your desktop**, outside any repo (change it with `SECURITY_SUITE_REPORTES`):
@@ -89,6 +91,7 @@ Each run adds a new date, so you can see whether the site improved.
 | `carrera.py` | Race conditions: N simultaneous requests to a redeem/coupon/payment | 3 |
 | `grabar-flujo.py` + `flujo.py` | Records a flow with Playwright and tries skipping steps, repeating the last one, starting midway | 3 |
 | `fuzz-api.sh` | API fuzzing from its OpenAPI (Schemathesis); local/staging only | 3 |
+| `supabase-rls.py` | Supabase/Firebase: tables without RLS, `using (true)`, role from `user_metadata`, public service_role; live it only **counts** rows (HEAD, no data downloaded) | 0–2 |
 | `webhook-falso.py` | Sends your payment webhook an unsigned event and one with a forged signature (Stripe, Mercado Pago, PayPal): does it mark the order paid? | 3 |
 | `chatbot-inyeccion.py` | 8 harmless messages to your chatbot: system prompt leak, another user's data, raw HTML, image exfiltration | 2 |
 | `revisar-access.py` | Cloudflare Access policies that actually let anyone in (Include with PIN, Everyone, gmail.com…) | 0 (reads config) |
@@ -137,13 +140,25 @@ The agents **never modify** your project. Fixes are made by the main session, wi
 - hardening module for FastAPI (argon2, slowapi with real IP behind Cloudflare, `__Host-` cookies,
   headers + CSP, strict CORS, errors without tracebacks, settings that fail without secrets);
 - GitHub Actions workflow (gitleaks + semgrep + dependency audit);
-- pre-commit with gitleaks, Dependabot, `.dockerignore`, non-root Dockerfile, `_headers` for Cloudflare, `security.txt`.
+- pre-commit with gitleaks, Dependabot, `.dockerignore`, non-root Dockerfile, `_headers` for Cloudflare, `security.txt`;
+- [Next.js + Supabase + Stripe](skills/security-suite/plantillas/nextjs-supabase.md): service_role server-only,
+  owner-based RLS, `/admin` in middleware, server-side prices, signed idempotent webhook, OTP, chatbot, uploads, headers;
+- [Express](skills/security-suite/plantillas/express.md): helmet, rate limit with real IP, raw-body webhook, strict zod,
+  `__Host-` cookies, Origin-based CSRF, owner in the where clause.
+
+### What it costs
+
+Agents read summaries, not raw JSON (`escaneo-compacto.md`); each auditor only gets its own checks (`chequeos.py`)
+and reads the OWASP guides on demand (`owasp/INDICE.md`). `incremental` mode skips re-auditing what didn't change,
+and the `economico` budget runs the pentester on a cheaper model. Auditors and the verifier always use the session's
+model: that's where quality is decided.
 
 ## Tests
 
 Sample output: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
 
-`tests/` generates a FastAPI app with **31 planted flaws and 6 traps** plus an answer sheet, to measure the suite
+`tests/` generates a FastAPI app with **31 planted flaws and 6 traps**, plus a Next.js + Supabase app with 17
+flaws typical of AI-built apps, plus an answer sheet, to measure the suite
 or compare models. See [`tests/README.md`](tests/README.md).
 
 ## Credits

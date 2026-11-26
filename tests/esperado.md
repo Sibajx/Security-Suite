@@ -51,6 +51,41 @@ Lo que un diagnóstico correcto de `crear-fixture.sh` debe encontrar. Sirve para
 | T5 | `/api/admin/usuarios` | sí exige `rol == admin` del token (la falla es V24/V25, no la ruta) |
 | T6 | `/api/webhook/envios` | verifica HMAC del cuerpo crudo con `hmac.compare_digest` |
 
+## Fixture Next.js + Supabase (`crear-fixture-next.sh`, solo estático)
+
+La app típica que genera una herramienta de IA. Patrones para el calificador en `esperado-next.json`.
+
+| ID | Falla | Dónde | Chequeo | Severidad mínima |
+|---|---|---|---|---|
+| N01 | `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY`: la service_role llega al navegador | `lib/supabase.ts`, `.env.local` | 1 | CRÍTICA |
+| N02 | `.env.local` en el historial de git | commit `proyecto generado` | 3 | CRÍTICA |
+| N03 | Tabla `pedidos` sin RLS | `supabase/migrations` | 10 | CRÍTICA |
+| N04 | `mensajes`: `for all to authenticated using (true) with check (true)` | idem | 10/6 | ALTA |
+| N05 | `reportes` "solo admin" decide con `user_metadata` (lo edita el usuario) | idem | 6 | CRÍTICA |
+| N06 | `/admin` protegido solo con un `if` en el navegador | `app/admin/page.tsx` | 4 | CRÍTICA |
+| N07 | Checkout cobra el `precio` que manda el cliente | `app/api/checkout/route.ts` | X4 | CRÍTICA |
+| N08 | Webhook de Stripe sin `constructEvent` marca pedidos como pagados | `app/api/webhooks/stripe/route.ts` | X10 | CRÍTICA |
+| N09 | `/api/pedidos/[id]` con service_role y sin filtro por dueño | `app/api/pedidos/[id]/route.ts` | 6 | CRÍTICA |
+| N10 | OTP con `Math.random`, sin límite de intentos ni caducidad | `app/api/otp/*` | 11 | ALTA |
+| N11 | Código interno `CUPON-STAFF-100` en el system prompt | `app/api/chat/route.ts` | X11 | ALTA |
+| N12 | Respuesta del LLM con `dangerouslySetInnerHTML` | `components/Chat.tsx` | 8/X11 | ALTA |
+| N13 | Open redirect con `?next=` | `app/api/salir/route.ts` | X3 | MEDIA |
+| N14 | Subida con `file.name` y `file.type` del cliente a un bucket público, `upsert` | `app/api/subir/route.ts` | 13 | ALTA |
+| N15 | `canjear_cupon`: lee y luego escribe (carrera) y `security definer` sin `search_path` | migración | X4/10 | ALTA |
+| N16 | `next` 14.1.0 (bypass de middleware, CVE-2025-29927) y source maps en producción | `package.json`, `next.config.js` | 20/19 | ALTA |
+| N17 | Sin headers de seguridad | `next.config.js` | 17 | MEDIA |
+| N18 | Respaldos, logs y topes de gasto como **preguntas** | — | X12, X6, 12 | ❓ |
+
+| ID | Trampa | Por qué es seguro |
+|---|---|---|
+| NT1 | `profiles` | RLS con `auth.uid() = id` |
+| NT2 | `productos` con `using (true)` para select | catálogo público a propósito, sin políticas de escritura |
+| NT3 | `app/api/webhooks/lemon` | HMAC del cuerpo crudo con `timingSafeEqual` |
+| NT4 | anon key en el bundle | es pública por diseño; lo que protege es la RLS |
+
+Herramientas sin IA (2026-11-26): `supabase-rls.py` encuentra N01, N03, N04, N05 y N15 (MEDIA); con `--publicas productos`
+no marca NT2. Las reglas de semgrep de la suite encuentran N01, N07, N08, N09, N10, N11, N12 y N13, y no marcan NT3.
+
 ## Puntuación
 
 - **Recall** = V01–V22 y V24–V32 encontradas / 31 (V23 y V33 suman si aparecen como preguntas). V24–V29 requieren el pentest

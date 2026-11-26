@@ -13,7 +13,7 @@ El orden va por daño probable en este tipo de apps: primero lo que expone a tod
 
 | # | Ataque | Chequeo | Cómo se revisa (código → en vivo) | Nivel en vivo |
 |---|---|---|---|---|
-| 1 | **Base abierta** (Supabase sin RLS / Firebase con reglas abiertas) | 10 | `supabase/migrations`, `*.sql`: cada tabla con `enable row level security` y políticas que usan `auth.uid()`; `firestore.rules`/`database.rules.json` sin `allow read, write: if true`. En vivo: ver abajo | 2 |
+| 1 | **Base abierta** (Supabase sin RLS / Firebase con reglas abiertas) | 10 | `supabase-rls.py <proyecto>`: tablas sin RLS, `using (true)`, rol desde `user_metadata`, service_role pública, reglas de Firebase. En vivo: ver abajo | 2 |
 | 2 | API key privada en el código | 1 | bundle (`dist/`, `.next/`, `assets/*.js`) y `VITE_*`/`NEXT_PUBLIC_*`: `service_role`, `sk_live`, `sk-…` | 1 |
 | 3 | `.env` en Git | 3 | `escaneo.sh`: sección de historial de `resumen.md` + gitleaks | — |
 | 4 | ID ajeno en la URL (IDOR) | 6 | consultas que filtran solo por `id` del parámetro; `matriz-permisos.py` con 2 cuentas | 2 |
@@ -31,7 +31,12 @@ El orden va por daño probable en este tipo de apps: primero lo que expone a tod
 
 ## Supabase / Firebase en vivo (ataque 1), sin extraer datos
 
-Con la URL y la **anon key pública** que ya viajan en el bundle (no son secretas):
+Con la URL y la **anon key pública** que ya viajan en el bundle (no son secretas), lo hace el script:
+```bash
+SUPABASE_ANON_KEY=… python3 SKILL/scripts/supabase-rls.py <proyecto> --url https://xxx.supabase.co --nivel 2 \
+  --publicas productos,categorias --salida "$R/evidencia/supabase.md"     # con $TOKEN_A también cuenta lo que ve la cuenta A
+```
+A mano, lo mismo:
 ```bash
 # ¿Cuántas filas ve un ANÓNIMO? Solo cuenta (count=exact) y 1 id: nunca descargar datos.
 curl -s -o /dev/null -D - "$SUPABASE_URL/rest/v1/<tabla>?select=id&limit=1" \

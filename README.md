@@ -59,6 +59,8 @@ En Claude Code, dentro de tu proyecto:
   en orden de daño (base de Supabase/Firebase abierta, keys en el bundle, IDOR, precio editable, webhook falso, cupón en
   paralelo, OTP por fuerza bruta, inyección al chatbot…), con puntaje X/15. Ver
   [`rapido-app-ia.md`](skills/security-suite/rapido-app-ia.md)
+- *"revisa lo que cambié desde la última auditoría"* → modo `incremental`: solo relanza los agentes del área que
+  cambió (`cambios-desde.py`) y hereda el resto del último reporte completo
 
 Los reportes se guardan **en tu escritorio**, fuera de cualquier repo (cámbialo con `SECURITY_SUITE_REPORTES`):
 ```
@@ -85,6 +87,7 @@ Cada corrida agrega una fecha nueva, así ves si el sitio mejoró.
 | `carrera.py` | Condición de carrera: N peticiones simultáneas a un canje/cupón/pago | 3 |
 | `grabar-flujo.py` + `flujo.py` | Graba un flujo con Playwright y prueba saltar pasos, repetir el último, hacerlo sin empezar | 3 |
 | `fuzz-api.sh` | Fuzzing de la API desde su OpenAPI (Schemathesis); solo local/staging | 3 |
+| `supabase-rls.py` | Supabase/Firebase: tablas sin RLS, `using (true)`, rol desde `user_metadata`, service_role pública; en vivo solo **cuenta** filas (HEAD, sin descargar datos) | 0–2 |
 | `webhook-falso.py` | Manda tu webhook de pago sin firma y con firma falsa (Stripe, Mercado Pago, PayPal): ¿lo marca como pagado? | 3 |
 | `chatbot-inyeccion.py` | 8 mensajes inofensivos a tu chatbot: fuga del system prompt, datos de otro usuario, HTML crudo, exfiltración por imagen | 2 |
 | `revisar-access.py` | Políticas de Cloudflare Access que en realidad dejan entrar a cualquiera (Include con PIN, Everyone, gmail.com…) | 0 (lee la config) |
@@ -135,13 +138,25 @@ auditar.
 - módulo de endurecimiento para FastAPI (argon2, slowapi con IP real detrás de Cloudflare, cookies `__Host-`,
   headers + CSP, CORS estricto, errores sin traceback, settings que fallan sin secretos);
 - workflow de GitHub Actions (gitleaks + semgrep + auditoría de dependencias);
-- pre-commit con gitleaks, Dependabot, `.dockerignore`, Dockerfile no root, `_headers` para Cloudflare, `security.txt`.
+- pre-commit con gitleaks, Dependabot, `.dockerignore`, Dockerfile no root, `_headers` para Cloudflare, `security.txt`;
+- [Next.js + Supabase + Stripe](skills/security-suite/plantillas/nextjs-supabase.md): service_role solo en el servidor,
+  RLS por dueño, `/admin` en el middleware, precio del servidor, webhook firmado e idempotente, OTP, chatbot, subidas, headers;
+- [Express](skills/security-suite/plantillas/express.md): helmet, rate limit con IP real, webhook con cuerpo crudo,
+  zod estricto, cookies `__Host-`, CSRF por Origin, dueño en el where.
+
+### Cuánto gasta
+
+Los agentes leen resúmenes, no los JSON crudos (`escaneo-compacto.md`); cada auditor recibe solo sus chequeos
+(`chequeos.py`) y consulta las guías de OWASP a demanda (`owasp/INDICE.md`). El modo `incremental` evita volver a
+auditar lo que no cambió, y en presupuesto `economico` el pentester usa un modelo más barato. Los auditores y el
+verificador siempre usan el modelo de la sesión: ahí se juega la calidad.
 
 ## Pruebas
 
 Ejemplo de salida: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
 
-`tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas** y una hoja de respuestas para medir la suite
+`tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas**, más una app Next.js + Supabase con 17
+fallas típicas de apps hechas con IA, y una hoja de respuestas para medir la suite
 o comparar modelos. Ver [`tests/README.md`](tests/README.md).
 
 ## Créditos

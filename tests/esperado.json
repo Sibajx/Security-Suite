@@ -1,0 +1,48 @@
+{
+  "_nota": "Patrones para tests/calificar.py. Una falla cuenta como encontrada si CUALQUIER patrón aparece fuera de la sección de descartados. Una trampa cuenta como reportada si su patrón aparece en un bloque que además trae severidad o ❌. Regex de Python, sin distinguir mayúsculas. Mantener en sincronía con esperado.md.",
+  "fallas": [
+    {"id": "V01", "titulo": ".env en el historial de git", "patrones": ["\\.env[^\\n]{0,80}(historial|commit|inicio)", "(historial|commit)[^\\n]{0,80}\\.env", "STRIPE_SECRET"]},
+    {"id": "V02", "titulo": "clave de OpenAI en el front", "patrones": ["config\\.js", "OPENAI_API_KEY[^\\n]{0,60}(front|navegador|bundle)", "clave de OpenAI"]},
+    {"id": "V03", "titulo": "SECRET_KEY por defecto", "patrones": ["changeme", "SECRET_KEY[^\\n]{0,60}(defecto|default)"]},
+    {"id": "V04", "titulo": "/admin sin auth", "patrones": ["/admin/usuarios[^\\n]{0,120}(sin auth|sin sesi|abierto|sin autenticaci)", "(sin auth|sin sesi|abierto|sin autenticaci)[^\\n]{0,80}/admin", "auth \\+ rol en `?/admin"]},
+    {"id": "V05", "titulo": "IDOR /pedidos", "patrones": ["IDOR[^\\n]{0,40}/pedidos/\\{", "/pedidos/\\{?(id|pedido_id|1)\\}?[^\\n]{0,80}(IDOR|due[ñn]o|ajeno)", "filtro por due[ñn]o en `?/pedidos"]},
+    {"id": "V06", "titulo": "mass assignment de rol", "patrones": ["mass assignment", "rol[^\\n]{0,60}(registro|body)[^\\n]{0,60}(admin|privilegio)", "sin `?rol`? en el registro"]},
+    {"id": "V07", "titulo": "SQL injection en /buscar", "patrones": ["(SQL injection|inyecci[oó]n SQL|SQLi)[^\\n]{0,60}/buscar", "/buscar[^\\n]{0,80}(SQL|inyecci)", "parametrizar `?/buscar"]},
+    {"id": "V08", "titulo": "XSS almacenado con |safe", "patrones": ["\\| ?safe", "XSS[^\\n]{0,40}(almacenad|rese[ñn]a)"]},
+    {"id": "V09", "titulo": "DOM XSS con innerHTML", "patrones": ["innerHTML", "resenas\\.js"]},
+    {"id": "V10", "titulo": "subidas con filename del cliente", "patrones": ["(subida|/subir)[^\\n]{0,120}(traversal|filename|nombre)", "path traversal[^\\n]{0,60}(subi|archivo)"]},
+    {"id": "V11", "titulo": "CORS * con credenciales", "patrones": ["CORS[^\\n]{0,80}(\\*|credencial|refleja)"]},
+    {"id": "V12", "titulo": "cookie sin flags", "patrones": ["cookie[^\\n]{0,80}(HttpOnly|Secure|SameSite|sin flags)"]},
+    {"id": "V13", "titulo": "GET que cambia estado / CSRF", "patrones": ["/cuenta/borrar", "CSRF[^\\n]{0,80}GET"]},
+    {"id": "V14", "titulo": "/debug y modo debug", "patrones": ["/debug", "debug ?= ?True"]},
+    {"id": "V15", "titulo": "Docker/compose inseguros", "patrones": ["--reload", "(Postgres|5432)[^\\n]{0,80}(publicad|puerto|ports)", "dockerignore", "no root"]},
+    {"id": "V16", "titulo": "sin rate limiting", "patrones": ["rate limit", "sin l[ií]mite de (peticiones|intentos)", "\\b429\\b"]},
+    {"id": "V17", "titulo": "/asistente sin auth ni tope", "patrones": ["/asistente[^\\n]{0,120}(auth|sesi|tope|an[oó]nim|gasto)", "(tope|gasto)[^\\n]{0,80}OpenAI"]},
+    {"id": "V18", "titulo": "contraseñas con MD5", "patrones": ["MD5[^\\n]{0,80}contrase", "contrase[^\\n]{0,80}MD5", "argon2"]},
+    {"id": "V19", "titulo": "SSRF en /vista-previa", "patrones": ["SSRF", "/vista-previa"]},
+    {"id": "V20", "titulo": "pickle / yaml.load", "patrones": ["pickle", "yaml\\.load"]},
+    {"id": "V21", "titulo": "dependencias con CVE", "patrones": ["CVE", "pip-audit[^\\n]{0,80}\\d"]},
+    {"id": "V22", "titulo": "sin headers de seguridad", "patrones": ["(headers|cabeceras) de seguridad", "Content-Security-Policy", "\\bCSP\\b"]},
+    {"id": "V24", "titulo": "JWT alg=none", "patrones": ["alg ?= ?none", "alg[\"']?: ?[\"']?none"]},
+    {"id": "V25", "titulo": "clave del JWT débil", "patrones": ["(clave|secreto)[^\\n]{0,40}(JWT|token)[^\\n]{0,40}d[eé]bil", "JWT[^\\n]{0,60}(d[eé]bil|adivin)", "JWT_SECRETO"]},
+    {"id": "V26", "titulo": "JWT sin exp", "patrones": ["sin `?exp`?", "no (trae|tiene|expira)[^\\n]{0,30}exp"]},
+    {"id": "V27", "titulo": "IDOR en /api/pedidos", "patrones": ["/api/pedidos/\\{?(pid|id|1)\\}?[^\\n]{0,80}(IDOR|due[ñn]o|ajeno|BOLA)", "(IDOR|BOLA)[^\\n]{0,60}/api/pedidos"]},
+    {"id": "V28", "titulo": "carrera en /api/canjear", "patrones": ["(carrera|race)[^\\n]{0,80}canje", "canje[^\\n]{0,80}(carrera|race|simult)"]},
+    {"id": "V29", "titulo": "checkout sin pagar", "patrones": ["(confirmar|checkout)[^\\n]{0,120}(sin pagar|pagado|saltar)", "saltar[^\\n]{0,40}pag"]},
+    {"id": "V30", "titulo": "webhook de pago sin firma", "patrones": ["webhook[^\\n]{0,120}(sin firma|firma falsa|no verifica|X10)", "/api/webhook/pago"]},
+    {"id": "V31", "titulo": "OTP sin límite de intentos", "patrones": ["/recuperar", "(OTP|c[oó]digo)[^\\n]{0,120}(intentos|fuerza bruta|random)"]},
+    {"id": "V32", "titulo": "asistente con secreto y herramienta sin filtro", "patrones": ["STAFF-?90", "ver_pedido", "system prompt[^\\n]{0,80}(secreto|c[oó]digo|descuento)"]}
+  ],
+  "preguntas": [
+    {"id": "V23", "titulo": "HTTPS y topes como preguntas", "patrones": ["❓[^\\n]{0,10}16", "❓[^\\n]{0,10}12"]},
+    {"id": "V33", "titulo": "logs y respaldos como preguntas", "patrones": ["❓[^\\n]{0,10}X6", "❓[^\\n]{0,10}X12", "❓[^\\n]{0,40}respaldo"]}
+  ],
+  "trampas": [
+    {"id": "T1", "titulo": "ORDER BY con lista blanca", "patrones": ["ORDER BY", "/productos"]},
+    {"id": "T2", "titulo": "md5 en /etag", "patrones": ["/etag"]},
+    {"id": "T3", "titulo": "URL de catálogo del servidor", "patrones": ["CATALOGO_URL"]},
+    {"id": "T4", "titulo": "consultas parametrizadas", "patrones": ["parametrizada[^\\n]{0,40}(inyecci|SQLi)"]},
+    {"id": "T5", "titulo": "/api/admin/usuarios exige rol", "patrones": ["/api/admin/usuarios[^\\n]{0,80}(sin auth|abierto|sin rol)"]},
+    {"id": "T6", "titulo": "webhook de envíos firmado", "patrones": ["/api/webhook/envios"]}
+  ]
+}

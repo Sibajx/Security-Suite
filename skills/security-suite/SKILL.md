@@ -19,7 +19,11 @@ Determina, preguntando **solo lo que no sepas** (una sola pregunta agrupada):
    antes de producción) · `reverificar` (después de arreglar: "ya lo arreglé", "¿ya quedó?", "verifica los arreglos")
    → salta a la sección **Reverificar** · `rapido-ia` (revisión exprés de los 15 ataques típicos a una app hecha con
    IA: "la hice con Lovable/Bolt/v0", "revisión rápida", "vibe coding") → lee `SKILL/rapido-app-ia.md` y sigue su flujo
-   (misma autorización y menú de niveles).
+   (misma autorización y menú de niveles) · `incremental` (ya hubo una revisión `completo` y el usuario dice "revisa
+   lo nuevo", "¿lo que cambié es seguro?", o pide revisar de nuevo un proyecto con reporte reciente) → sección
+   **Incremental**.
+   **Presupuesto** (no lo preguntes; úsalo si el usuario lo menciona): `normal` por defecto · `economico` → ver
+   **Modelos por tarea**.
 3. Si hay prueba en vivo, lee `SKILL/reglas-de-enfrentamiento.md` y:
    a. **Autorización**: busca el host en `${SECURITY_SUITE_AUTORIZADOS:-$HOME/.config/security-suite/autorizados.yml}`.
       Si está, toma su `entorno`, `nivel_max` y `notas`. Si no, pregunta si el sitio es suyo; sin un sí claro → modo
@@ -49,12 +53,14 @@ bash SKILL/scripts/escaneo.sh <proyecto> "$R/evidencia"
 bash SKILL/scripts/en-vivo.sh <url> > "$R/evidencia/en-vivo.md"     # solo si hay URL autorizada
 bash SKILL/scripts/subdominios.sh <dominio-raíz> "$R/evidencia/subdominios.md"   # dominio propio: superficie (X7)
 bash SKILL/scripts/correo-dns.sh <dominio-raíz> > "$R/evidencia/correo-dns.md"  # suplantación de correo (X8)
+python3 SKILL/scripts/supabase-rls.py <proyecto> --salida "$R/evidencia/supabase.md"  # si usa Supabase/Firebase (10, 1, 6)
 ```
+`escaneo.sh` deja `escaneo-compacto.md` (semgrep, gitleaks y dependencias resumidos): es lo que leen los agentes.
 Si el dominio está en Cloudflare y tienes acceso a la cuenta (MCP o API, solo lectura): baja
 `GET /accounts/{id}/access/apps` y `/access/groups` a `$R/evidencia/access.json` como `{"apps": [...], "grupos": [...]}`
 y corre `python3 SKILL/scripts/revisar-access.py "$R/evidencia/access.json" --salida "$R/evidencia/access.md"` (X9).
 Lo que esté detrás de Access no se ve desde afuera: que pida login no prueba que solo deje entrar a quien debe.
-Lee `recon.md`, `resumen.md` y, si hay dominio, `subdominios.md`: **todo host público nuevo que no esté en el archivo
+Lee `recon.md`, `resumen.md` (al final apunta a `escaneo-compacto.md`) y, si hay dominio, `subdominios.md`: **todo host público nuevo que no esté en el archivo
 de autorizaciones se reporta (X7) pero no se ataca** hasta que el usuario lo agregue. Si una herramienta falta y el usuario no quiere instalarla, sigue y anótalo.
 
 ## Fase 2 — Auditores en paralelo
@@ -70,6 +76,20 @@ Stack: <2 líneas de recon.md>. Devuelve SOLO el reporte con el formato del cont
 ```
 Sin herramienta de subagentes (p. ej. si tú ya eres un subagente): haz los tres tú mismo, en secuencia, con el
 mismo contrato.
+
+### Modelos por tarea
+
+El costo se va en lo que leen los agentes, no en cuántos son. Pasa `model` al lanzar cada subagente:
+
+| Tarea | `normal` | `economico` | Por qué |
+|---|---|---|---|
+| Auditores (infra-secretos, acceso, entradas) | el de la sesión | el de la sesión | aquí se gana o se pierde el recall |
+| Verificador | el de la sesión | el de la sesión | decide qué es falso positivo |
+| Pentester | el de la sesión | `sonnet` | sobre todo corre herramientas y anota respuestas |
+| `rapido-ia` | el de la sesión, sin subagentes | igual | ya es una sola pasada |
+
+Nunca uses un modelo chico (`haiku`) para auditar: lo que ahorra lo pierde en hallazgos que no ve.
+Para comparar el efecto de un cambio en calidad y tokens: `python3 tests/calificar.py` sobre el fixture (ver `tests/README.md`).
 
 ## Fase 3 — Pentest (modo `pentest` o `completo`)
 
@@ -109,6 +129,18 @@ y córrelo una vez: debe salir 1 contra la versión actual. Sin repros, la rever
 Los agentes nunca modifican el proyecto. Si el usuario pide arreglar: hazlo tú en la sesión principal, de lo más
 grave a lo menos, agrega una prueba del proyecto por cada arreglo, y termina con **Reverificar**.
 Un secreto expuesto no se "arregla" borrándolo: se **rota**; dilo explícitamente.
+
+## Incremental (lo nuevo desde la última revisión completa)
+
+1. Base: el último `DIAGNOSTICO.md` del sitio con **Modo:** `completo`. Corre
+   `python3 SKILL/scripts/cambios-desde.py <proyecto> <base> --salida "$R/evidencia/cambios.md"`.
+   Si sale 3 (base vieja, no completa o cambios grandes) o 2 (sin commit en la base), dilo y haz una revisión `completo`.
+2. Fase 1 completa igual (`escaneo.sh` es barato y trae CVE nuevas aunque el código no haya cambiado).
+3. Fase 2 **solo** con los agentes que lista `cambios.md`, agregando al prompt: `ARCHIVOS=<los de su lista>. Audita solo
+   esos archivos y lo que llamen o los llame; el resto se hereda del reporte base`.
+4. Pentest y verificador solo para hallazgos nuevos CRÍTICA/ALTA. Los repros de la base se corren con `reverificar.py`.
+5. Reporte con **Modo:** `incremental (base <fecha>)`: estados nuevos donde hubo cambios y «heredado (<fecha>)» en el resto.
+   Un incremental no limpia el 🟠/🔴 del índice: eso lo hace solo una revisión `completo`.
 
 ## Reverificar (después de arreglar)
 

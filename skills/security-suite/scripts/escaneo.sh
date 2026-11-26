@@ -112,4 +112,8 @@ done < <(command -v npm >/dev/null && find . -name node_modules -prune -o -name 
   [ -f Dockerfile ] && [ ! -f .dockerignore ] && echo "- Hay Dockerfile pero **no hay .dockerignore** (COPY . . mete .env y .git a la imagen)"
 } >> "$R"
 
+# 6. Resumen compacto para los agentes (tabla corta en vez de los JSON crudos)
+python3 "$(dirname "$REGLAS")/../scripts/resumir-escaneo.py" "$P" "$OUT" >/dev/null 2>&1 && \
+  nota "- resumen compacto de semgrep/gitleaks/dependencias → escaneo-compacto.md (los agentes leen esto primero)"
+
 echo "Resultados en $OUT"; cat "$R"

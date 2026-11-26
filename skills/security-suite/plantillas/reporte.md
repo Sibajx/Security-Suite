@@ -1,6 +1,6 @@
 # Diagnóstico de seguridad — {PROYECTO}
 
-**Fecha:** {FECHA} · **Modo:** {auditoria|pentest|completo|rapido-ia} · **Objetivo en vivo:** {URL o "ninguno"} ({ENTORNO}, nivel {N}, autorizado por el usuario: {sí/no})
+**Fecha:** {FECHA} · **Commit:** `{git rev-parse --short=10 HEAD, o «sin git»}` · **Modo:** {auditoria|pentest|completo|rapido-ia|incremental} · **Objetivo en vivo:** {URL o "ninguno"} ({ENTORNO}, nivel {N}, autorizado por el usuario: {sí/no})
 
 ## Veredicto
 

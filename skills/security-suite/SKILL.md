@@ -17,7 +17,9 @@ Determina, preguntando **solo lo que no sepas** (una sola pregunta agrupada):
 1. **Proyecto**: ruta (por defecto el directorio actual).
 2. **Modo**: `auditoria` (solo código, sin red hacia la app) · `pentest` (en vivo) · `completo` (ambos, por defecto
    antes de producción) · `reverificar` (después de arreglar: "ya lo arreglé", "¿ya quedó?", "verifica los arreglos")
-   → salta a la sección **Reverificar**.
+   → salta a la sección **Reverificar** · `rapido-ia` (revisión exprés de los 15 ataques típicos a una app hecha con
+   IA: "la hice con Lovable/Bolt/v0", "revisión rápida", "vibe coding") → lee `SKILL/rapido-app-ia.md` y sigue su flujo
+   (misma autorización y menú de niveles).
 3. Si hay prueba en vivo, lee `SKILL/reglas-de-enfrentamiento.md` y:
    a. **Autorización**: busca el host en `${SECURITY_SUITE_AUTORIZADOS:-$HOME/.config/security-suite/autorizados.yml}`.
       Si está, toma su `entorno`, `nivel_max` y `notas`. Si no, pregunta si el sitio es suyo; sin un sí claro → modo
@@ -87,7 +89,7 @@ Si hay más de 25, pásale solo los CRÍTICA y los ALTA de confianza media.
 Escribe `$R/DIAGNOSTICO.md` con `SKILL/plantillas/reporte.md`:
 - Une duplicados (el mismo problema visto por dos agentes = un hallazgo con todas las ubicaciones).
 - **Veredicto**: 🔴 si hay alguna CRÍTICA · 🟠 si hay ALTAS · 🟢 si solo MEDIAS/BAJAS.
-- **Puntaje**: chequeos ✅ / chequeos que aplican (de los 20; los X van aparte).
+- **Puntaje**: chequeos ✅ / chequeos que aplican (de los 20; los X1–X12 van aparte). En `rapido-ia`: X/15.
 - **Tratamiento**: elige de `SKILL/mejores-practicas.md` solo lo que aplica al stack, ordenado por impacto/esfuerzo,
   apuntando a `SKILL/plantillas/`.
 - Copia las plantillas que recomiendes **solo si el usuario lo pide**.
@@ -140,6 +142,9 @@ La suite es **solo bajo demanda**: no instales tareas programadas ni procesos en
 | "Es un proyecto chico, me salto el pentest/verificador" | El modo lo decide el usuario, no el tamaño. |
 | "Pruebo un poquito en producción sin preguntar" | Sin autorización y nivel explícitos, no hay pruebas en vivo. |
 | "Muestro la clave para que vea cuál es" | Solo 4 caracteres + `…`. Siempre. |
+| "El webhook solo lo llama Stripe" | Lo llama quien sepa la URL. Sin firma verificada es X10 CRÍTICA: `webhook-falso.py`. |
+| "El prompt dice que no revele nada, entonces es seguro" | Eso no es un control. Lo que esté en el prompt se filtra; lo que haga una herramienta lo decide el servidor (X11). |
+| "Tienen respaldos, X12 ✅" | ¿Fuera del servidor, inmutables y restaurados alguna vez? Si no lo sabes, es ❓. |
 | "Sin cuentas no puedo probar permisos, lo marco ✅" | Es ❓/NO PROBADO y se piden 2 cuentas de prueba; IDOR es la falla #1 de APIs. |
 | "Corro el fuzzing en producción, son solo 50 ejemplos" | Escribe basura en la base. Solo local/staging salvo petición explícita. |
 | "Ya lo arreglé, lo marco ✅ sin volver a atacar" | Corre `reverificar.py`: el arreglo cuenta cuando su repro sale 0. |

@@ -35,6 +35,10 @@ Lo que un diagnóstico correcto de `crear-fixture.sh` debe encontrar. Sirve para
 | V27 | IDOR en la API con token: `/api/pedidos/{id}` no revisa el dueño | `api_pedido` | 6 | ALTA |
 | V28 | Condición de carrera: el canje lee, espera y escribe → 10 canjes con 100 puntos | `/api/canjear` | X4 | ALTA |
 | V29 | Checkout: `confirmar` no revisa `pagado` → pedido sin pagar | `/api/checkout/*` | X4 | ALTA |
+| V30 | Webhook de pago sin firma: cualquier POST marca un pedido como pagado | `/api/webhook/pago` | X10 | CRÍTICA |
+| V31 | Código de recuperación de 6 dígitos con `random`, sin límite de intentos ni caducidad → robo de cuenta | `/recuperar/verificar` | 11 | CRÍTICA |
+| V32 | Asistente: código interno `STAFF-90` en el system prompt y herramienta `ver_pedido` sin filtro por dueño | `/api/asistente` | X11 | CRÍTICA |
+| V33 | Sin registro de auth/admin y sin respaldos fuera del servidor (como **preguntas**) | — | X6, X12 | ALTA / ❓ |
 
 ## Trampas (NO deben reportarse como falla)
 
@@ -45,12 +49,14 @@ Lo que un diagnóstico correcto de `crear-fixture.sh` debe encontrar. Sirve para
 | T3 | `requests.get(f"{config.CATALOGO_URL}/lista")` | URL del servidor |
 | T4 | `execute("... ?", (x,))` | parametrizada |
 | T5 | `/api/admin/usuarios` | sí exige `rol == admin` del token (la falla es V24/V25, no la ruta) |
+| T6 | `/api/webhook/envios` | verifica HMAC del cuerpo crudo con `hmac.compare_digest` |
 
 ## Puntuación
 
-- **Recall** = V01–V22 y V24–V29 encontradas / 28 (V23 suma si aparece como pregunta). V24–V29 requieren el pentest
+- **Recall** = V01–V22 y V24–V32 encontradas / 31 (V23 y V33 suman si aparecen como preguntas). V24–V29 requieren el pentest
   con las herramientas (`jwt-revisar.py`, `matriz-permisos.py`, `carrera.py`, `flujo.py`) y 2 cuentas: ana y beto.
-- **Confirmadas en vivo** (modo completo): V04, V05, V06, V07, V11, V12, V13, V14, V16 deberían salir CONFIRMADAS.
+- **Confirmadas en vivo** (modo completo): V04, V05, V06, V07, V11, V12, V13, V14, V16, V30, V31 deberían salir CONFIRMADAS
+  (V32 necesita una clave real de OpenAI: sin ella queda confirmada por código).
 - **Precisión**: cada trampa reportada como falla resta 1.
 - **Higiene**: ningún secreto completo en el reporte; el fixture no se modificó (`git status` limpio salvo `tienda.db`).
 
@@ -75,3 +81,12 @@ y no hizo preguntas (V23). gitleaks solo tampoco detecta V01.
 | `carrera.py` | V28 (10 éxitos de 10) | — |
 | `flujo.py` (+ `grabar-flujo.py` con Playwright) | V29 ("Saltar pagar" termina con éxito) | 0 (saltar carrito, repetir y solo-último → rechazados) |
 | `fuzz-api.sh` | 500 con traceback en `/vista-previa` (V14/V19), parámetros que aceptan cualquier cosa | — |
+
+### Herramientas de v1.1 (2026-11-26, fixture en :8799)
+
+| Herramienta | Encontró | Falsos positivos |
+|---|---|---|
+| `webhook-falso.py` | V30 (sin firma y con firma Stripe falsa → 200; el pedido 2 quedó `pagado = 1`) | 0 (T6 → 401 en las dos pruebas) |
+| ≤ 10 códigos erróneos con `curl` | V31 (10 × 400 sin bloqueo; el código correcto siguió sirviendo) | — |
+| reglas de semgrep de la suite | V30 (`webhook-sin-firma`), V31 (`codigo-con-random`) | 0 (T6 no marcado) |
+| `chatbot-inyeccion.py` | probado con un servidor falso en `tests/probar-webhook-chatbot.sh` (V32 necesita LLM real) | — |

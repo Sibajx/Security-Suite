@@ -1,6 +1,6 @@
 # Pruebas de la suite
 
-La suite se mide contra una app FastAPI con 28 fallas plantadas y 5 trampas.
+La suite se mide contra una app FastAPI con 31 fallas plantadas y 6 trampas.
 
 ```bash
 # 1. Crear el fixture (las claves falsas se generan al vuelo; ningún secreto vive en este repo)

@@ -27,7 +27,7 @@ plus senior-level extras:
 
 | Secrets | Access | Inputs | Infra | Extras |
 |---|---|---|---|---|
-| 1 hidden API keys · 2 env vars · 3 keys in git (history) | 4 admin route · 5 auth · 6 permissions/IDOR · 10 DB rules · 11 rate limiting · 12 spend cap | 7 validation · 8 XSS · 9 SQL injection · 13 uploads · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 production config | SSRF · deserialization/RCE · path traversal · business logic · CI/CD · monitoring · subdomains · email/DNS · Cloudflare Access policies |
+| 1 hidden API keys · 2 env vars · 3 keys in git (history) | 4 admin route · 5 auth · 6 permissions/IDOR · 10 DB rules · 11 rate limiting · 12 spend cap | 7 validation · 8 XSS · 9 SQL injection · 13 uploads · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 production config | SSRF · deserialization/RCE · path traversal · business logic · CI/CD · logging and monitoring · subdomains · email/DNS · Cloudflare Access policies · **payment webhooks** · **chatbots and LLMs** · **ransomware-proof backups** |
 
 ## Install
 
@@ -59,6 +59,9 @@ In Claude Code, inside your project:
 - *"review the security of this project"* → code audit
 - *"pentest http://localhost:8000, it's mine"* → live testing
 - *"full diagnosis before deploying, staging is at …"* → everything
+- *"quick review, I built the app with Lovable"* → `rapido-ia` mode: the 15 typical attacks on an AI-built app, ordered
+  by damage (open Supabase/Firebase database, keys in the bundle, IDOR, editable price, fake webhook, parallel coupon,
+  OTP brute force, chatbot injection…), scored X/15. See [`rapido-app-ia.md`](skills/security-suite/rapido-app-ia.md)
 - *"I fixed it, check again"* → re-verification of every finding
 
 Reports are saved **on your desktop**, outside any repo (change it with `SECURITY_SUITE_REPORTES`):
@@ -86,6 +89,8 @@ Each run adds a new date, so you can see whether the site improved.
 | `carrera.py` | Race conditions: N simultaneous requests to a redeem/coupon/payment | 3 |
 | `grabar-flujo.py` + `flujo.py` | Records a flow with Playwright and tries skipping steps, repeating the last one, starting midway | 3 |
 | `fuzz-api.sh` | API fuzzing from its OpenAPI (Schemathesis); local/staging only | 3 |
+| `webhook-falso.py` | Sends your payment webhook an unsigned event and one with a forged signature (Stripe, Mercado Pago, PayPal): does it mark the order paid? | 3 |
+| `chatbot-inyeccion.py` | 8 harmless messages to your chatbot: system prompt leak, another user's data, raw HTML, image exfiltration | 2 |
 | `revisar-access.py` | Cloudflare Access policies that actually let anyone in (Include with PIN, Everyone, gmail.com…) | 0 (reads config) |
 | `reverificar.py` | After fixing: re-runs each finding's reproduction (`evidencia/repro/`) and builds a before → now table | the repro's |
 | `vigia.sh` + `instalar-vigia.sh` | Passive weekly check of all your sites and a note of what changed (`VIGIA.md`) | 1 |
@@ -138,7 +143,7 @@ The agents **never modify** your project. Fixes are made by the main session, wi
 
 Sample output: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
 
-`tests/` generates a FastAPI app with **28 planted flaws and 5 traps** plus an answer sheet, to measure the suite
+`tests/` generates a FastAPI app with **31 planted flaws and 6 traps** plus an answer sheet, to measure the suite
 or compare models. See [`tests/README.md`](tests/README.md).
 
 ## Credits

@@ -14,6 +14,8 @@ por impacto/esfuerzo, y apunta a la plantilla lista cuando exista.
 | Monitor de uptime + alerta de errores | medio | 15 min | — |
 | `security.txt` | bajo | 2 min | `plantillas/otros.md` |
 | Respaldo automático de la DB **y prueba de restauración** | alto | 1 h | — |
+| Copia del respaldo **fuera del servidor e inmutable** (R2/S3/B2 con Object Lock o credencial sin permiso de borrar) + 2FA en hosting, DB y almacenamiento (X12) | alto | 1 h | `plantillas/otros.md` |
+| Logs de auth y admin enviados fuera del servidor, retención ≥ 90 días, alerta de logins fallidos y nuevo admin (X6) | alto | 30 min | — |
 
 ## FastAPI / Python
 
@@ -55,6 +57,33 @@ por impacto/esfuerzo, y apunta a la plantilla lista cuando exista.
 - Imagen slim, usuario no root, `.dockerignore`, sin `--reload`, healthcheck.
 - DB/Redis sin `ports:`; secretos por env/secrets del orquestador (Dokploy, Coolify, etc.).
 - Logs sin tokens, contraseñas ni datos personales completos.
+
+## Pagos y webhooks (X10, X4)
+
+- Verificar la firma del webhook con el **cuerpo crudo** antes de tocar la base: FastAPI `await request.body()` +
+  `stripe.Webhook.construct_event(cuerpo, firma, secreto)`; Express `express.raw()` + `stripe.webhooks.constructEvent`.
+  Mercado Pago: HMAC-SHA256 de `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` con `hmac.compare_digest`.
+- Tabla `eventos_webhook(id UNIQUE)`: insertar el ID del evento primero; si ya existe, responder 200 sin hacer nada.
+- Cruzar monto, moneda y pedido con la base; el precio sale **siempre** del servidor (Stripe: `price` de catálogo, no
+  `price_data` armado en el front).
+- La página de éxito solo **muestra** el estado que ya escribió el webhook; nunca marca nada como pagado.
+- Cupones: `UPDATE cupones SET usos = usos + 1 WHERE codigo = ? AND usos < max_usos` y revisar filas afectadas.
+
+## Códigos cortos (OTP, recuperación, verificación) (11)
+
+- `secrets.randbelow(10**6)` / `crypto.randomInt(0, 1e6)`; guardar el **hash** del código, no el código.
+- Contador de intentos por código: al 5.º fallo se invalida; caducidad 10 min; un código vigente por cuenta.
+- Respuesta idéntica exista o no la cuenta; rate limit por cuenta además de por IP.
+
+## Chatbots y funciones con LLM (X11)
+
+- System prompt sin secretos ni datos de clientes (suponer que se filtra).
+- Herramientas: reciben el usuario **de la sesión** desde el servidor (nunca del modelo) y aplican el mismo filtro
+  por dueño que la API; acciones que cambian datos o dinero piden confirmación del usuario en la UI.
+- RAG: filtrar documentos por usuario/tenant en la consulta al índice, antes del modelo.
+- Respuesta pintada como texto (`textContent`) o markdown sanitizado (DOMPurify) sin imágenes remotas.
+- Endpoint con sesión, rate limit, `max_tokens` y tope diario por usuario.
+- Prueba: `scripts/chatbot-inyeccion.py` en cada cambio del prompt o de las herramientas.
 
 ## APIs de pago (LLM, WhatsApp, SMS, correo)
 

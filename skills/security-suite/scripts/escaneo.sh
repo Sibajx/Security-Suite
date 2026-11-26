@@ -7,6 +7,7 @@ set -uo pipefail
 P="$(cd "${1:?uso: escaneo.sh <proyecto> <salida>}" && pwd)"
 OUT="${2:?falta directorio de salida}"
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
+REGLAS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/semgrep/reglas-suite.yml"   # X10, X11, 11
 export PATH="$HOME/.local/bin:$PATH"
 R="$OUT/resumen.md"
 echo "# Escaneo automático — $(basename "$P") — $(date '+%Y-%m-%d %H:%M')" > "$R"
@@ -51,11 +52,21 @@ fi
 # 2. Análisis estático
 if command -v semgrep >/dev/null; then
   semgrep scan --config p/owasp-top-ten --config p/secrets --config p/python --config p/javascript \
-    --metrics=off --quiet --json -o "$OUT/semgrep.json" . >/dev/null 2>"$OUT/semgrep.err"
+    --config "$REGLAS" --metrics=off --quiet --json -o "$OUT/semgrep.json" . >/dev/null 2>"$OUT/semgrep.err"
   if [ -s "$OUT/semgrep.json" ]; then
     n=$(grep -o '"check_id"' "$OUT/semgrep.json" | wc -l)
     nota "- semgrep: $n hallazgos → semgrep.json (filtrar falsos positivos)"
-  else nota "- semgrep: falló (ver semgrep.err; ¿sin red para bajar reglas?)"; fi
+  else
+    # Sin red no bajan las reglas públicas: al menos las propias (webhooks, LLM, códigos) corren offline.
+    semgrep scan --config "$REGLAS" --metrics=off --quiet --json -o "$OUT/semgrep.json" . >/dev/null 2>>"$OUT/semgrep.err"
+    if [ -s "$OUT/semgrep.json" ]; then
+      n=$(grep -o '"check_id"' "$OUT/semgrep.json" | wc -l)
+      nota "- semgrep: reglas públicas no disponibles (¿sin red?); solo reglas de la suite: $n hallazgos → semgrep.json"
+    else nota "- semgrep: falló (ver semgrep.err)"; fi
+  fi
+  # semgrep antepone la ruta del archivo a las reglas locales: «…semgrep.security-suite.webhook-sin-firma»
+  n=$(grep -o '"check_id": *"[^"]*security-suite\.[a-z-]*"' "$OUT/semgrep.json" 2>/dev/null | wc -l)
+  [ "$n" -gt 0 ] && nota "  - de ellos, $n de las reglas de la suite (webhooks sin firma, salida de LLM, códigos con random)"
 else nota "- semgrep: NO INSTALADO"; fi
 
 # 3. Dependencias Python

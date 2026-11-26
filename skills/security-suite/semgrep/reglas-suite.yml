@@ -1,0 +1,97 @@
+# Reglas propias de security-suite (sin red: escaneo.sh las pasa con --config a semgrep junto a las públicas).
+# Son PISTAS para los auditores, no veredictos: confirmar leyendo el código (ver SecurityChecks.md).
+rules:
+  - id: security-suite.webhook-sin-firma
+    message: >-
+      X10: ruta de webhook que no parece verificar la firma del proveedor (construct_event, HMAC con compare_digest,
+      verify_webhook_signature) ni volver a consultar el pago. Si marca pedidos como pagados, cualquiera puede llamarla.
+    severity: ERROR
+    languages: [python]
+    metadata: {chequeo: X10, categoria: webhook}
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$APP.$VERB($RUTA, ...)
+              def $F(...): ...
+          - pattern: |
+              @$APP.$VERB($RUTA, ...)
+              async def $F(...): ...
+      - metavariable-regex:
+          metavariable: $VERB
+          regex: ^(post|route|api_route|put)$
+      - metavariable-regex:
+          metavariable: $RUTA
+          regex: (?i).*(webhook|ipn|notificaci|notification|payment.?callback|pago).*
+      - pattern-not-regex: (?s)(verify_webhook|verificar_firma|verify_signature|validate_signature|WebhookSignature|compare_digest|construct_event)
+
+  - id: security-suite.webhook-sin-firma-js
+    message: >-
+      X10: ruta de webhook (Express/Hono/Next) que no parece verificar la firma (constructEvent, timingSafeEqual,
+      verifyWebhook…). Si marca pedidos como pagados, cualquiera puede llamarla.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata: {chequeo: X10, categoria: webhook}
+    patterns:
+      - pattern: $APP.post($RUTA, ...)
+      - metavariable-regex:
+          metavariable: $RUTA
+          regex: (?i).*(webhook|ipn|notificaci|notification|payment.?callback).*
+      - pattern-not-regex: (?s)(constructEvent|timingSafeEqual|verifyWebhook|verifySignature|validateSignature|verify-webhook-signature|verificarFirma)
+
+  - id: security-suite.llm-salida-a-html
+    message: >-
+      X11/8: la respuesta de un LLM se pinta como HTML. La salida del modelo es dato no confiable (inyección de prompt
+      → XSS). Usar textContent o sanitizar con DOMPurify.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: X11, categoria: llm}
+    patterns:
+      - pattern-either:
+          - pattern: $EL.innerHTML = <... $R ...>
+          - pattern: $EL.insertAdjacentHTML($P, <... $R ...>)
+      - metavariable-regex:
+          metavariable: $R
+          regex: (?i).*(respuesta|reply|answer|completion|message\.content|choices|assistant|output_text|\.text\b).*
+
+  - id: security-suite.llm-secreto-en-prompt
+    message: >-
+      X11: el system prompt parece incluir una clave, código interno o contraseña. Hay que suponer que el system
+      prompt se filtra: sacar el secreto del prompt.
+    severity: WARNING
+    languages: [python, javascript, typescript]
+    metadata: {chequeo: X11, categoria: llm}
+    pattern-regex: (?i)["'`]role["'`]\s*:\s*["'`]system["'`]\s*,\s*["'`]content["'`]\s*:\s*[^\n]{0,400}(contrase[ñn]a|password|api[_ ]?key|clave secreta|c[oó]digo (interno|de descuento|secreto)|token)
+
+  - id: security-suite.codigo-con-random
+    message: >-
+      11: código de verificación/recuperación/cupón generado con un generador no criptográfico. Usar
+      secrets.randbelow / secrets.token_* (Python) o crypto.randomInt (Node), con límite de intentos y caducidad.
+    severity: WARNING
+    languages: [python]
+    metadata: {chequeo: "11", categoria: codigos}
+    patterns:
+      - pattern-either:
+          - pattern: $V = random.$FN(...)
+          - pattern: $V = str(random.$FN(...))
+          - pattern: $V = "".join(random.$FN(...))
+          - pattern: $V = "".join(random.$FN(...) for $X in $Y)
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i).*(otp|codigo|code|pin|cupon|coupon|token|verif).*
+
+  - id: security-suite.codigo-con-random-js
+    message: >-
+      11: código de verificación/recuperación/cupón generado con Math.random. Usar crypto.randomInt, con límite
+      de intentos y caducidad.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: "11", categoria: codigos}
+    patterns:
+      - pattern-either:
+          - pattern: const $V = <... Math.random() ...>;
+          - pattern: let $V = <... Math.random() ...>;
+          - pattern: var $V = <... Math.random() ...>;
+          - pattern: $V = <... Math.random() ...>;
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i).*(otp|codigo|code|pin|cupon|coupon|token|verif).*

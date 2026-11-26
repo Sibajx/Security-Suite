@@ -19,11 +19,11 @@ diagnóstico con veredicto, puntaje y las mejores implementaciones para tu stack
 ## Qué revisa
 
 Los **20 chequeos** de [`SecurityChecks.md`](skills/security-suite/SecurityChecks.md), cada uno con severidad fija,
-más 6 extras de nivel senior:
+más 12 extras de nivel senior:
 
 | Secretos | Acceso | Entradas | Infra | Extras |
 |---|---|---|---|---|
-| 1 API keys ocultas · 2 variables de entorno · 3 keys en git (historial) | 4 ruta admin · 5 auth · 6 permisos/IDOR · 10 reglas DB · 11 rate limiting · 12 límite de gasto | 7 validación · 8 XSS · 9 SQL injection · 13 subidas · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 config de producción | SSRF · deserialización/RCE · path traversal · lógica de negocio · CI/CD · monitoreo |
+| 1 API keys ocultas · 2 variables de entorno · 3 keys en git (historial) | 4 ruta admin · 5 auth · 6 permisos/IDOR · 10 reglas DB · 11 rate limiting · 12 límite de gasto | 7 validación · 8 XSS · 9 SQL injection · 13 subidas · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 config de producción | SSRF · deserialización/RCE · path traversal · lógica de negocio · CI/CD · registro y monitoreo · subdominios · correo/DNS · políticas de Cloudflare Access · **webhooks de pago** · **chatbots y LLM** · **respaldos contra ransomware** |
 
 ## Instalación
 
@@ -55,6 +55,10 @@ En Claude Code, dentro de tu proyecto:
 - *"revisa la seguridad de este proyecto"* → auditoría de código
 - *"haz un pentest de http://localhost:8000, es mío"* → pruebas en vivo
 - *"diagnóstico completo antes de desplegar, la URL de staging es …"* → todo
+- *"revisión rápida, la app la hice con Lovable"* → modo `rapido-ia`: los 15 ataques típicos a una app hecha con IA,
+  en orden de daño (base de Supabase/Firebase abierta, keys en el bundle, IDOR, precio editable, webhook falso, cupón en
+  paralelo, OTP por fuerza bruta, inyección al chatbot…), con puntaje X/15. Ver
+  [`rapido-app-ia.md`](skills/security-suite/rapido-app-ia.md)
 
 Los reportes se guardan **en tu escritorio**, fuera de cualquier repo (cámbialo con `SECURITY_SUITE_REPORTES`):
 ```
@@ -81,6 +85,8 @@ Cada corrida agrega una fecha nueva, así ves si el sitio mejoró.
 | `carrera.py` | Condición de carrera: N peticiones simultáneas a un canje/cupón/pago | 3 |
 | `grabar-flujo.py` + `flujo.py` | Graba un flujo con Playwright y prueba saltar pasos, repetir el último, hacerlo sin empezar | 3 |
 | `fuzz-api.sh` | Fuzzing de la API desde su OpenAPI (Schemathesis); solo local/staging | 3 |
+| `webhook-falso.py` | Manda tu webhook de pago sin firma y con firma falsa (Stripe, Mercado Pago, PayPal): ¿lo marca como pagado? | 3 |
+| `chatbot-inyeccion.py` | 8 mensajes inofensivos a tu chatbot: fuga del system prompt, datos de otro usuario, HTML crudo, exfiltración por imagen | 2 |
 | `revisar-access.py` | Políticas de Cloudflare Access que en realidad dejan entrar a cualquiera (Include con PIN, Everyone, gmail.com…) | 0 (lee la config) |
 | `reverificar.py` | Después de arreglar: vuelve a correr la reproducción de cada hallazgo (`evidencia/repro/`) y arma la tabla antes → ahora | el del repro |
 | `vigia.sh` + `instalar-vigia.sh` | Revisión semanal pasiva de todos tus sitios y aviso de lo que cambió (`VIGIA.md`) | 1 |
@@ -135,7 +141,7 @@ auditar.
 
 Ejemplo de salida: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
 
-`tests/` genera una app FastAPI con **28 fallas plantadas y 5 trampas** y una hoja de respuestas para medir la suite
+`tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas** y una hoja de respuestas para medir la suite
 o comparar modelos. Ver [`tests/README.md`](tests/README.md).
 
 ## Créditos

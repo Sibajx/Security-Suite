@@ -25,3 +25,5 @@ jobs:
         run: bash tests/probar-reverificar.sh
       - name: revisar-access.py
         run: bash tests/probar-revisar-access.sh
+      - name: webhook-falso.py y chatbot-inyeccion.py
+        run: bash tests/probar-webhook-chatbot.sh

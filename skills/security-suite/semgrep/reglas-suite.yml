@@ -1,0 +1,233 @@
+# Reglas propias de security-suite (sin red: escaneo.sh las pasa con --config a semgrep junto a las públicas).
+# Son PISTAS para los auditores, no veredictos: confirmar leyendo el código (ver SecurityChecks.md).
+rules:
+  - id: security-suite.webhook-sin-firma
+    message: >-
+      X10: ruta de webhook que no parece verificar la firma del proveedor (construct_event, HMAC con compare_digest,
+      verify_webhook_signature) ni volver a consultar el pago. Si marca pedidos como pagados, cualquiera puede llamarla.
+    severity: ERROR
+    languages: [python]
+    metadata: {chequeo: X10, categoria: webhook}
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$APP.$VERB($RUTA, ...)
+              def $F(...): ...
+          - pattern: |
+              @$APP.$VERB($RUTA, ...)
+              async def $F(...): ...
+      - metavariable-regex:
+          metavariable: $VERB
+          regex: ^(post|route|api_route|put)$
+      - metavariable-regex:
+          metavariable: $RUTA
+          regex: (?i).*(webhook|ipn|notificaci|notification|payment.?callback|pago).*
+      - pattern-not-regex: (?s)(verify_webhook|verificar_firma|verify_signature|validate_signature|WebhookSignature|compare_digest|construct_event)
+
+  - id: security-suite.webhook-sin-firma-js
+    message: >-
+      X10: ruta de webhook (Express/Hono/Next) que no parece verificar la firma (constructEvent, timingSafeEqual,
+      verifyWebhook…). Si marca pedidos como pagados, cualquiera puede llamarla.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata: {chequeo: X10, categoria: webhook}
+    patterns:
+      - pattern: $APP.post($RUTA, ...)
+      - metavariable-regex:
+          metavariable: $RUTA
+          regex: (?i).*(webhook|ipn|notificaci|notification|payment.?callback).*
+      - pattern-not-regex: (?s)(constructEvent|timingSafeEqual|verifyWebhook|verifySignature|validateSignature|verify-webhook-signature|verificarFirma)
+
+  - id: security-suite.llm-salida-a-html
+    message: >-
+      X11/8: la respuesta de un LLM se pinta como HTML. La salida del modelo es dato no confiable (inyección de prompt
+      → XSS). Usar textContent o sanitizar con DOMPurify.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: X11, categoria: llm}
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $EL.innerHTML = <... $R ...>
+                  - pattern: $EL.insertAdjacentHTML($P, <... $R ...>)
+              - metavariable-regex:
+                  metavariable: $R
+                  regex: (?i).*(respuesta|reply|answer|completion|message\.content|choices|assistant|output_text|\.text\b).*
+          - pattern-regex: (?i)dangerouslySetInnerHTML=\{\{\s*__html:\s*[\w.\[\]]*(respuesta|reply|answer|completion|message|content|output)
+
+  - id: security-suite.llm-secreto-en-prompt
+    message: >-
+      X11: el system prompt parece incluir una clave, código interno o contraseña. Hay que suponer que el system
+      prompt se filtra: sacar el secreto del prompt.
+    severity: WARNING
+    languages: [python, javascript, typescript]
+    metadata: {chequeo: X11, categoria: llm}
+    pattern-regex: (?i)\brole["'`]?\s*:\s*["'`]system["'`]\s*,\s*["'`]?content["'`]?\s*:\s*[^\n]{0,400}(contrase[ñn]a|password|api[_ ]?key|clave secreta|c[oó]digo (de descuento )?(interno|secreto)|c[oó]digo de descuento|token)
+
+  - id: security-suite.codigo-con-random
+    message: >-
+      11: código de verificación/recuperación/cupón generado con un generador no criptográfico. Usar
+      secrets.randbelow / secrets.token_* (Python) o crypto.randomInt (Node), con límite de intentos y caducidad.
+    severity: WARNING
+    languages: [python]
+    metadata: {chequeo: "11", categoria: codigos}
+    patterns:
+      - pattern-either:
+          - pattern: $V = random.$FN(...)
+          - pattern: $V = str(random.$FN(...))
+          - pattern: $V = "".join(random.$FN(...))
+          - pattern: $V = "".join(random.$FN(...) for $X in $Y)
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i).*(otp|codigo|code|pin|cupon|coupon|token|verif).*
+
+  - id: security-suite.codigo-con-random-js
+    message: >-
+      11: código de verificación/recuperación/cupón generado con Math.random. Usar crypto.randomInt, con límite
+      de intentos y caducidad.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: "11", categoria: codigos}
+    patterns:
+      - pattern-either:
+          - pattern: const $V = <... Math.random() ...>;
+          - pattern: let $V = <... Math.random() ...>;
+          - pattern: var $V = <... Math.random() ...>;
+          - pattern: $V = <... Math.random() ...>;
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i).*(otp|codigo|code|pin|cupon|coupon|token|verif).*
+
+  - id: security-suite.webhook-sin-firma-next
+    message: >-
+      X10: route handler de webhook (Next.js/Remix/SvelteKit) que no parece verificar la firma (constructEvent,
+      timingSafeEqual, verifyWebhook…). Si marca pedidos como pagados, cualquiera puede llamarlo.
+    severity: ERROR
+    languages: [typescript, javascript]
+    metadata: {chequeo: X10, categoria: webhook}
+    paths:
+      include: ["**/*webhook*/**", "**/*webhook*.*", "**/ipn/**", "**/notifications/**"]
+    patterns:
+      - pattern-either:
+          - pattern: export async function POST(...) { ... }
+          - pattern: export function POST(...) { ... }
+          - pattern: export const POST = $F
+      - pattern-not-regex: (?s)(constructEvent|timingSafeEqual|verifyWebhook|verifySignature|validateSignature|verify-webhook-signature|verificarFirma|Webhook\(.*\)\.verify)
+
+  - id: security-suite.service-role-publica
+    message: >-
+      1/10: la service_role de Supabase en una variable pública (NEXT_PUBLIC_, VITE_, PUBLIC_…) termina en el bundle
+      del navegador y salta toda la RLS. Usarla solo en el servidor, con un nombre sin prefijo público, y rotarla.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata: {chequeo: "1", categoria: supabase}
+    pattern-regex: (NEXT_PUBLIC|VITE|PUBLIC|EXPO_PUBLIC|REACT_APP)_[A-Z_]*SERVICE_ROLE[A-Z_]*
+
+  - id: security-suite.precio-del-cliente
+    message: >-
+      X4: el monto que se cobra sale de la petición del cliente. Cualquiera lo cambia a 1 centavo. Calcular el precio
+      en el servidor desde la base (o usar un price de catálogo de Stripe), nunca del body.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata: {chequeo: X4, categoria: pagos}
+    mode: taint
+    pattern-sources:
+      - pattern: await $REQ.json()
+      - pattern: await $REQ.formData()
+      - pattern: $REQ.body
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: "{..., unit_amount: $X, ...}"
+              - pattern: "{..., amount: $X, ...}"
+          - focus-metavariable: $X
+
+  - id: security-suite.precio-del-cliente-py
+    message: >-
+      X4: el monto que se cobra sale de la petición del cliente. Calcular el precio en el servidor desde la base.
+    severity: ERROR
+    languages: [python]
+    metadata: {chequeo: X4, categoria: pagos}
+    mode: taint
+    pattern-sources:
+      - pattern: await $REQ.json()
+      - pattern: $REQ.get_json(...)
+      - pattern: $REQ.json
+      - pattern: $REQ.form
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: $F(..., unit_amount=$X, ...)
+              - pattern: $F(..., amount=$X, ...)
+              - pattern: '{..., "unit_amount": $X, ...}'
+          - focus-metavariable: $X
+
+  - id: security-suite.redirect-abierto
+    message: >-
+      X3: redirección a una URL que manda el usuario (open redirect: phishing con tu dominio, robo de tokens en OAuth).
+      Aceptar solo rutas relativas que empiecen con "/" y no con "//", o una lista blanca.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: X3, categoria: redireccion}
+    mode: taint
+    pattern-sources:
+      - pattern: $REQ.query
+      - pattern: $X.searchParams.get(...)
+      - pattern: $REQ.nextUrl.searchParams.get(...)
+    pattern-sinks:
+      - pattern: $RES.redirect($X)
+      - pattern: NextResponse.redirect($X)
+      - pattern: redirect($X)
+    pattern-sanitizers:
+      - pattern: new URL($X, $BASE)
+
+  - id: security-suite.redirect-abierto-py
+    message: >-
+      X3: redirección a una URL que manda el usuario. Aceptar solo rutas relativas o una lista blanca.
+    severity: WARNING
+    languages: [python]
+    metadata: {chequeo: X3, categoria: redireccion}
+    mode: taint
+    pattern-sources:
+      - pattern: $REQ.args.get(...)
+      - pattern: $REQ.query_params.get(...)
+      - pattern: $REQ.query_params[...]
+      - pattern: $REQ.GET.get(...)
+    pattern-sinks:
+      - pattern: redirect($X)
+      - pattern: RedirectResponse($X, ...)
+      - pattern: HttpResponseRedirect($X)
+
+  - id: security-suite.supabase-por-id-sin-dueno
+    message: >-
+      6: consulta a Supabase por id sin filtrar por el usuario. Si este cliente es service_role (servidor) o la RLS no
+      filtra por dueño, cualquiera ve o cambia lo ajeno cambiando el id. Agregar .eq("usuario", user.id) o confiar en
+      una política RLS con auth.uid() usando el cliente del usuario.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: "6", categoria: idor}
+    patterns:
+      - pattern: $C.from($T).$OP(...).eq("id", $X)
+      # filtro por dueño antes del id (queda dentro del rango) o después (segundo .eq / .match)
+      - pattern-not-regex: (?i)\.eq\(\s*["'`](user|usuario|owner|due[nñ]o|tenant|cliente|autor|author|profile)\w*["'`]
+      - pattern-not-inside: $C.from($T).$OP(...).eq("id", $X).eq($K, $U)
+      - pattern-not-inside: $C.from($T).$OP(...).eq("id", $X).eq($K, $U).$M(...)
+      - pattern-not-inside: $C.from($T).$OP(...).eq("id", $X).match(...)
+
+  - id: security-suite.prisma-por-id-sin-dueno
+    message: >-
+      6: Prisma busca o cambia un registro solo por id. Si el id viene de la petición, agregar el dueño al where
+      (findFirst({ where: { id, userId } })) o comprobarlo antes de devolver/modificar.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: "6", categoria: idor}
+    patterns:
+      - pattern-either:
+          - pattern: "$P.$M.findUnique({where: {id: $V}})"
+          - pattern: "$P.$M.findUniqueOrThrow({where: {id: $V}})"
+          - pattern: "$P.$M.update({where: {id: $V}, ...})"
+          - pattern: "$P.$M.delete({where: {id: $V}})"
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i).*(param|query|body|req|id).*

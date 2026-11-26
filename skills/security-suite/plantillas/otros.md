@@ -89,3 +89,26 @@ Contact: mailto:seguridad@tudominio.com
 Expires: 2027-12-31T23:59:59Z
 Preferred-Languages: es, en
 ```
+
+## Respaldo a prueba de ransomware (X12): `respaldo.sh` + bucket con bloqueo
+
+Idea: el servidor de la app **solo puede escribir** respaldos; no puede borrarlos ni sobrescribirlos. Aunque un
+atacante tome el servidor (o lo cifre un ransomware), las copias de los últimos días sobreviven.
+
+1. Bucket **en otra cuenta o proveedor** (Cloudflare R2, Backblaze B2, S3) con retención/bloqueo de objetos
+   (R2: *Bucket lock rules*; B2 y S3: *Object Lock* en modo compliance) de 14–30 días.
+2. Credencial para el servidor con permiso de **escribir** objetos, sin permiso de borrar ni de cambiar el bloqueo.
+   La credencial de administración del bucket nunca está en el servidor.
+3. Cron diario:
+```bash
+#!/usr/bin/env bash
+# respaldo.sh — volcado comprimido y cifrado, subido con nombre por fecha (nunca se sobrescribe).
+set -euo pipefail
+f="db-$(date -u +%Y%m%dT%H%M%SZ).sql.gz.age"
+pg_dump "$DATABASE_URL" | gzip | age -r "$RESPALDO_CLAVE_PUBLICA" > "/tmp/$f"   # la clave privada vive fuera del servidor
+rclone copyto "/tmp/$f" "respaldos:mi-bucket/db/$f" --s3-no-check-bucket
+rm -f "/tmp/$f"
+```
+4. Una vez al mes: **restaurar** el último respaldo en una base desechable y anotar la fecha. Un respaldo que nunca
+   se restauró no cuenta.
+5. 2FA en el hosting, en la base gestionada y en la cuenta del bucket.

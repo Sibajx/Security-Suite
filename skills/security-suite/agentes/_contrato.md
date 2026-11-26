@@ -6,8 +6,16 @@ Lo leen todos los agentes antes de su propio archivo.
 
 - `PROYECTO`: ruta absoluta del proyecto (solo lectura).
 - `SKILL`: ruta absoluta de la skill (aquí están `SecurityChecks.md`, `owasp/`, `scripts/`).
-- `ESCANEO`: carpeta con lo que ya corrieron los escáneres (`resumen.md`, `gitleaks-*.json`, `semgrep.json`,
-  `pip-audit-*.json`, `npm-audit*.json`, `recon.md`, y `en-vivo.md` si hubo URL).
+- `ESCANEO`: carpeta con lo que ya corrieron los escáneres. Lee **`escaneo-compacto.md`** (semgrep, gitleaks y
+  dependencias ya resumidos y sin duplicados), `resumen.md`, `recon.md` y `en-vivo.md` si hubo URL. Los JSON crudos
+  (`semgrep.json`, `gitleaks-*.json`, `pip-audit-*.json`, `npm-audit*.json`) solo si el compacto no te alcanza.
+
+## Cómo leer sin gastar de más
+
+- Tus chequeos: `python3 SKILL/scripts/chequeos.py <tu-agente>`, no `SecurityChecks.md` completo.
+- Guías de `SKILL/owasp/`: **a demanda**, solo la sección que resuelve una duda concreta (`SKILL/owasp/INDICE.md`).
+- El código: empieza por el inventario de rutas de `recon.md` y por los archivos que citan los escáneres; abre
+  solo lo que esté en el camino de un dato. No leas el proyecto entero "por contexto".
 - `URL` (opcional) y el alcance autorizado.
 
 ## Reglas

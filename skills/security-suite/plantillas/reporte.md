@@ -1,6 +1,6 @@
 # Diagnóstico de seguridad — {PROYECTO}
 
-**Fecha:** {FECHA} · **Modo:** {auditoria|pentest|completo} · **Objetivo en vivo:** {URL o "ninguno"} ({ENTORNO}, nivel {N}, autorizado por el usuario: {sí/no})
+**Fecha:** {FECHA} · **Commit:** `{git rev-parse --short=10 HEAD, o «sin git»}` · **Modo:** {auditoria|pentest|completo|rapido-ia|incremental} · **Objetivo en vivo:** {URL o "ninguno"} ({ENTORNO}, nivel {N}, autorizado por el usuario: {sí/no})
 
 ## Veredicto
 
@@ -16,13 +16,13 @@
    {qué hacer en una línea}
 2. …
 
-## Los 20 chequeos
+## Los 20 chequeos  {en `rapido-ia`: «Los 15 ataques», tabla de `rapido-app-ia.md`}
 
 | # | Chequeo | Estado | Hallazgos |
 |---|---|---|---|
 | 1 | Ocultar API keys | ❌ | S1 |
 | … | | | |
-| X1–X6 | Extras | | |
+| X1–X12 | Extras (SSRF, ejecución, traversal, lógica, CI/CD, registro, superficie, correo, Access, webhooks de pago, LLM, respaldos) | | |
 
 ## Hallazgos
 

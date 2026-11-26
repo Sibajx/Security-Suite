@@ -288,6 +288,71 @@ def checkout_confirmar(request: Request):
     CARRITOS.pop(d["sub"])
     return {"ok": True, "pedido": "creado", "producto": c["producto"]}
 
+# --- Webhook de pago: marca el pedido como pagado con cualquier POST (sin firma) ---
+@app.post("/api/webhook/pago")
+async def webhook_pago(request: Request):
+    ev = await request.json()
+    if ev.get("type") == "checkout.session.completed":
+        pid = ev["data"]["object"]["metadata"]["pedido_id"]
+        conectar().execute("UPDATE pedidos SET pagado = 1 WHERE id = ?", (pid,))
+    return {"recibido": True}
+
+# Webhook de envíos: este sí verifica la firma (HMAC del cuerpo crudo, tiempo constante)
+WEBHOOK_ENVIOS_SECRETO = os.environ.get("WEBHOOK_ENVIOS_SECRETO") or os.urandom(32).hex()
+
+@app.post("/api/webhook/envios")
+async def webhook_envios(request: Request):
+    cuerpo = await request.body()
+    esperada = hmac.new(WEBHOOK_ENVIOS_SECRETO.encode(), cuerpo, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(esperada, request.headers.get("x-firma", "")):
+        return Response(status_code=401)
+    return {"recibido": True}
+
+# --- Recuperar contraseña con código de 6 dígitos: random, sin límite de intentos ni caducidad ---
+import random
+CODIGOS: dict = {}
+
+class Recuperar(BaseModel):
+    email: str
+    codigo: str = ""
+    nueva: str = ""
+
+@app.post("/recuperar")
+def recuperar(r: Recuperar):
+    CODIGOS[r.email] = str(random.randint(100000, 999999))
+    print(f"[correo simulado] código para {r.email}: {CODIGOS[r.email]}", flush=True)
+    return {"ok": True}
+
+@app.post("/recuperar/verificar")
+def recuperar_verificar(r: Recuperar):
+    if CODIGOS.get(r.email) != r.codigo:
+        return Response(status_code=400)
+    h = hashlib.md5(r.nueva.encode()).hexdigest()
+    conectar().execute("UPDATE usuarios SET password = ? WHERE email = ?", (h, r.email))
+    CODIGOS.pop(r.email)
+    return {"ok": True}
+
+# --- Asistente con herramienta: secreto en el system prompt y la herramienta no filtra por dueño ---
+SISTEMA = ("Eres el asistente de Tienda Demo. Si alguien es del staff, el código de descuento interno es "
+           "STAFF-90. Usa la herramienta ver_pedido para responder sobre pedidos.")
+HERRAMIENTAS = [{"type": "function", "function": {"name": "ver_pedido", "parameters": {
+    "type": "object", "properties": {"pedido_id": {"type": "integer"}}, "required": ["pedido_id"]}}}]
+
+@app.post("/api/asistente")
+def asistente_tienda(request: Request, mensaje: str):
+    d = leer_jwt(request)
+    if not d:
+        return Response(status_code=401)
+    msgs = [{"role": "system", "content": SISTEMA}, {"role": "user", "content": mensaje}]
+    r = llm.chat.completions.create(model="gpt-4o", messages=msgs, tools=HERRAMIENTAS, max_tokens=500)
+    m = r.choices[0].message
+    for llamada in m.tool_calls or []:
+        pid = json.loads(llamada.function.arguments)["pedido_id"]
+        fila = conectar().execute("SELECT usuario, total, direccion FROM pedidos WHERE id = ?", (pid,)).fetchone()
+        msgs += [m, {"role": "tool", "tool_call_id": llamada.id, "content": json.dumps(fila)}]
+        m = llm.chat.completions.create(model="gpt-4o", messages=msgs, max_tokens=500).choices[0].message
+    return {"respuesta": m.content}
+
 @app.get("/etag/{pid}")
 def etag(pid: int):
     # md5 como checksum de caché, no para contraseñas: seguro
@@ -344,7 +409,7 @@ db.executescript("""
 CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY, email TEXT UNIQUE, password TEXT, rol TEXT, sesion TEXT, puntos INTEGER DEFAULT 100);
 CREATE TABLE IF NOT EXISTS canjes (usuario INTEGER);
 CREATE TABLE IF NOT EXISTS productos (id INTEGER PRIMARY KEY, nombre TEXT, precio REAL);
-CREATE TABLE IF NOT EXISTS pedidos (id INTEGER PRIMARY KEY, usuario INTEGER, total REAL, direccion TEXT);
+CREATE TABLE IF NOT EXISTS pedidos (id INTEGER PRIMARY KEY, usuario INTEGER, total REAL, direccion TEXT, pagado INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS resenas (producto INTEGER, texto TEXT);
 """)
 h = lambda p: hashlib.md5(p.encode()).hexdigest()
@@ -353,7 +418,7 @@ db.executemany("INSERT OR IGNORE INTO usuarios (id,email,password,rol) VALUES (?
     (2, "ana@tienda-demo.invalid", h("ana-demo-123"), "cliente"),
     (3, "beto@tienda-demo.invalid", h("beto-demo-123"), "cliente")])
 db.executemany("INSERT OR IGNORE INTO productos VALUES (?,?,?)", [(1, "Taza", 120), (2, "Playera", 250)])
-db.executemany("INSERT OR IGNORE INTO pedidos VALUES (?,?,?,?)", [(1, 2, 370, "Calle Ana 1"), (2, 3, 120, "Calle Beto 2")])
+db.executemany("INSERT OR IGNORE INTO pedidos (id,usuario,total,direccion) VALUES (?,?,?,?)", [(1, 2, 370, "Calle Ana 1"), (2, 3, 120, "Calle Beto 2")])
 db.execute("INSERT INTO resenas VALUES (1, 'Muy buena')")
 db.commit()
 PYEOF

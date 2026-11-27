@@ -78,7 +78,7 @@ La app típica que genera una herramienta de IA. Patrones para el calificador en
 
 | ID | Trampa | Por qué es seguro |
 |---|---|---|
-| NT1 | `profiles` | RLS con `auth.uid() = id` |
+| NT1 | `profiles` | RLS con `auth.uid() = id` (que el usuario pueda editar su columna `rol` sí es un hallazgo válido, BAJA) |
 | NT2 | `productos` con `using (true)` para select | catálogo público a propósito, sin políticas de escritura |
 | NT3 | `app/api/webhooks/lemon` | HMAC del cuerpo crudo con `timingSafeEqual` |
 | NT4 | anon key en el bundle | es pública por diseño; lo que protege es la RLS |

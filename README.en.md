@@ -93,7 +93,6 @@ Each run adds a new date, so you can see whether the site improved.
 | `fuzz-api.sh` | API fuzzing from its OpenAPI (Schemathesis); local/staging only | 3 |
 | `supabase-rls.py` | Supabase/Firebase: tables without RLS, `using (true)`, role from `user_metadata`, public service_role; live it only **counts** rows (HEAD, no data downloaded) | 0–2 |
 | `webhook-falso.py` | Sends your payment webhook an unsigned event and one with a forged signature (Stripe, Mercado Pago, PayPal): does it mark the order paid? | 3 |
-| `chatbot-inyeccion.py` | 8 harmless messages to your chatbot: system prompt leak, another user's data, raw HTML, image exfiltration | 2 |
 | `revisar-access.py` | Cloudflare Access policies that actually let anyone in (Include with PIN, Everyone, gmail.com…) | 0 (reads config) |
 | `reverificar.py` | After fixing: re-runs each finding's reproduction (`evidencia/repro/`) and builds a before → now table | the repro's |
 | `vigia.sh` + `instalar-vigia.sh` | Passive weekly check of all your sites and a note of what changed (`VIGIA.md`) | 1 |

@@ -131,4 +131,3 @@ prueba. Sin una corrida de v1.1 con la misma medición, todavía no hay comparac
 | `webhook-falso.py` | V30 (sin firma y con firma Stripe falsa → 200; el pedido 2 quedó `pagado = 1`) | 0 (T6 → 401 en las dos pruebas) |
 | ≤ 10 códigos erróneos con `curl` | V31 (10 × 400 sin bloqueo; el código correcto siguió sirviendo) | — |
 | reglas de semgrep de la suite | V30 (`webhook-sin-firma`), V31 (`codigo-con-random`) | 0 (T6 no marcado) |
-| `chatbot-inyeccion.py` | probado con un servidor falso en `tests/probar-webhook-chatbot.sh` (V32 necesita LLM real) | — |

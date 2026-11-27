@@ -23,7 +23,7 @@ El orden va por daño probable en este tipo de apps: primero lo que expone a tod
 | 8 | Webhook de pago falso | X10 | regla `security-suite.webhook-sin-firma`; `webhook-falso.py` | 3 |
 | 9 | Cupón ×100 a la vez | X4 | canje sin transacción/UNIQUE; `carrera.py` | 3 |
 | 10 | Fuerza bruta (login y códigos de 6 dígitos) | 11 | límite por cuenta y por código; prueba de ≤ 10 códigos erróneos | 2 |
-| 11 | Inyectar instrucciones al chatbot | X11 | system prompt, herramientas, RAG; `chatbot-inyeccion.py` | 2 |
+| 11 | Inyectar instrucciones al chatbot | X11 | system prompt, herramientas, RAG, a dónde va la respuesta (código y reglas de semgrep `llm-*`) | — |
 | 12 | Script en el perfil (XSS guardado) | 8 | `dangerouslySetInnerHTML`, markdown sin sanitizar, regla `security-suite.llm-salida-a-html` | 3 |
 | 13 | Web shell disfrazada de foto | 13 | bucket de Storage público con `.html`/`.svg` servidos desde tu dominio; tipo por extensión | 3 |
 | 14 | Inyección SQL | 9 | funciones RPC/`execute` con SQL armado con texto; Edge Functions con template strings | 2 |

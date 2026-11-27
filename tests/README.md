@@ -38,5 +38,5 @@ python3 tests/calificar.py <carpeta-del-reporte> --esperado tests/esperado-next.
 
 ## Pruebas de los scripts (las corre el CI)
 
-`probar-reverificar.sh`, `probar-revisar-access.sh`, `probar-webhook-chatbot.sh`, `probar-supabase-rls.sh`,
+`probar-reverificar.sh`, `probar-revisar-access.sh`, `probar-webhook.sh`, `probar-supabase-rls.sh`,
 `probar-calificar.sh`, `probar-utilidades.sh` (sin red) y `probar-semgrep.sh` (necesita `pip install semgrep`).

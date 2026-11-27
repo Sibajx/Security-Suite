@@ -37,8 +37,7 @@ Guías a demanda, solo la sección que necesites (`SKILL/owasp/INDICE.md`): `inj
    - ¿A dónde va la respuesta? `innerHTML`, `v-html`, `|safe`, markdown renderizado sin sanitizar, SQL, shell → falla
      de 8/9/X2 con origen en el LLM. Markdown con imágenes remotas permitido → exfiltración.
    - ¿Entra contenido de terceros al prompt (reseñas, correos, páginas, PDFs)? → inyección indirecta.
-   Escribe la **prueba en vivo sugerida** para `chatbot-inyeccion.py` (ruta, campo del mensaje, campo de la respuesta,
-   un fragmento del system prompt para detectar la fuga y un dato de la cuenta B para detectar fuga entre usuarios).
+   X11 se confirma por código: cita el `archivo:línea` del prompt, de cada herramienta y de donde se pinta la respuesta.
 7. Para cada inyección confirmada escribe la **prueba en vivo sugerida** (petición exacta, payload no destructivo,
    p. ej. `' OR '1'='1` en una búsqueda, `sqlmap -u ... -p q`) para que el pentester la confirme.
 8. Entrega con el formato del contrato. Prefijo `E`.

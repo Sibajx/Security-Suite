@@ -16,7 +16,7 @@ Estados por chequeo: ✅ cumple · ❌ falla · ⚠️ parcial · N/A no aplica 
 | `infra-secretos` | 1, 2, 3, 16, 17, 19, 20, X5, X6, X7, X8, X9, X12 |
 | `acceso` | 4, 5, 6, 10, 11, 12, X4, X10 |
 | `entradas` | 7, 8, 9, 13, 14, 15, 18, X1, X2, X3, X11 |
-| `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19), códigos cortos (11), webhook sin firma (X10), chatbot (X11) |
+| `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19), códigos cortos (11), webhook sin firma (X10) |
 
 ---
 

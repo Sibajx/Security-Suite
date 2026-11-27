@@ -153,7 +153,7 @@ verificador siempre usan el modelo de la sesión: ahí se juega la calidad.
 
 ## Pruebas
 
-Ejemplo de salida: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
+Ejemplos de salida (corridas reales, calificadas): [modo completo](docs/ejemplo-diagnostico.md) · [modo `rapido-ia`](docs/ejemplo-rapido-ia.md).
 
 `tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas**, más una app Next.js + Supabase con 17
 fallas típicas de apps hechas con IA, y una hoja de respuestas para medir la suite

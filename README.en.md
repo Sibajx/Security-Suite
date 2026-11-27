@@ -155,7 +155,7 @@ model: that's where quality is decided.
 
 ## Tests
 
-Sample output: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
+Sample output (real, graded runs): [full mode](docs/ejemplo-diagnostico.md) · [`rapido-ia` mode](docs/ejemplo-rapido-ia.md).
 
 `tests/` generates a FastAPI app with **31 planted flaws and 6 traps**, plus a Next.js + Supabase app with 17
 flaws typical of AI-built apps, plus an answer sheet, to measure the suite

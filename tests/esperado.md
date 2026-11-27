@@ -107,6 +107,13 @@ y no hizo preguntas (V23). gitleaks solo tampoco detecta V01.
 | 2026-11-09 | sin skill (línea base) | ~20/22 | 0 | — | no vio V01 ni hizo preguntas |
 | 2026-11-09 | Opus 5.5 + security-suite v1 | 22/22 + preguntas | 0 | 14/14 probadas | verificador ajustó 6 severidades; XSS bajó a MEDIA porque el fixture no tenía escritura de reseñas (corregido después) |
 
+| 2026-11-27 | Opus 5.5 + security-suite v1.2, modo completo | 31/31 + 2/2 preguntas | 0 | 20 de 31 (el resto, por código) | 618k tokens nuevos + 7,8M de caché en los 5 subagentes (sin contar la sesión principal); el verificador no encontró falsos positivos |
+| 2026-11-27 | Opus 5.5 + security-suite v1.2, `rapido-ia` (fixture Next.js) | 17/17 + 1/1 pregunta | 0 | — (solo estático) | 75k nuevos + 979k de caché, un solo agente; encontró además que `profiles` deja editar la columna `rol` (BAJA, válido) |
+
+Notas de la corrida del 2026-11-27: el calificador se corrigió durante la corrida (contaba como trampas los descartes y
+sumaba la caché al total). `matriz-permisos.py` borró las 3 cuentas demo al ejecutar `GET /cuenta/borrar`: corregido y con
+prueba. Sin una corrida de v1.1 con la misma medición, todavía no hay comparación de ahorro antes/después.
+
 ### Herramientas de nivel 2–3 (2026-11-10, fixture en :8766)
 
 | Herramienta | Encontró | Falsos positivos |

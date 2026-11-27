@@ -15,7 +15,8 @@ antes de concluir que la suite falló. Sale 0 siempre que pudo calificar; 2 si f
 """
 import argparse, glob, json, os, re, subprocess, sys
 
-DESCARTE = re.compile(r"^#{2,4} .*(descart|no son fallas|trampas)", re.I)
+# Título que ABRE la sección de descartados/trampas (no un hallazgo que mencione la palabra de pasada).
+DESCARTE = re.compile(r"^#{2,4}\s+(.*\b(se descart|descartad|no son fallas|falsos? positivos?)|trampas?\b)", re.I)
 SEVERIDAD = re.compile(r"CR[IÍ]TICA|\bALTA\b|\bMEDIA\b|\bBAJA\b|❌")
 # Un bloque que menciona la trampa para decir que es segura no cuenta como reportarla.
 EXCULPA = re.compile(r"descartad|correct[oa]\b|a prop[oó]sito|no es (una )?falla|es segur|s[ií] verifica|bien hecho|trampa", re.I)

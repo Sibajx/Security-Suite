@@ -1,0 +1,32 @@
+{
+  "_nota": "Hoja de respuestas de tests/crear-fixture-django.sh para tests/calificar.py (--esperado tests/esperado-django.json). Django 3.2 + DRF, solo estático. Tabla legible en tests/esperado.md.",
+  "fallas": [
+    {"id": "D01", "titulo": ".env con secretos en el historial de git", "patrones": ["\\.env[^\\n]{0,80}(historial|commit)", "(historial|commit)[^\\n]{0,80}\\.env", "SECRET_KEY[^\\n]{0,40}git"]},
+    {"id": "D02", "titulo": "SECRET_KEY por defecto y DEBUG=True", "patrones": ["SECRET_KEY[^\\n]{0,60}(defecto|default|changeme)", "DEBUG ?= ?True", "changeme"]},
+    {"id": "D03", "titulo": "ALLOWED_HOSTS = ['*']", "patrones": ["ALLOWED_HOSTS", "allowed.?hosts[^\\n]{0,30}\\*"]},
+    {"id": "D04", "titulo": "SQL injection en buscar", "patrones": ["(SQL injection|inyecci[oó]n SQL|SQLi)[^\\n]{0,40}(buscar|catalogo)", "buscar[^\\n]{0,60}(SQL|inyecci)", "cursor\\.execute[^\\n]{0,40}%"]},
+    {"id": "D05", "titulo": "mass assignment: serializer fields='__all__'", "patrones": ["mass assignment", "__all__", "fields[^\\n]{0,30}all[^\\n]{0,40}(usuario|pagado|cliente)"]},
+    {"id": "D06", "titulo": "IDOR en ver_pedido", "patrones": ["IDOR[^\\n]{0,40}ver_pedido", "ver_pedido[^\\n]{0,80}(IDOR|due[ñn]o|ajeno)", "get_object_or_404[^\\n]{0,80}(sin|no)[^\\n]{0,30}(usuario|due)"]},
+    {"id": "D07", "titulo": "PedidoViewSet sin auth y sin filtrar por usuario", "patrones": ["PedidoViewSet", "AllowAny[^\\n]{0,80}pedido", "queryset[^\\n]{0,40}all\\(\\)[^\\n]{0,60}(todos|sin filtrar|usuario)"]},
+    {"id": "D08", "titulo": "csrf_exempt en borrar_cuenta", "patrones": ["csrf_exempt", "borrar_cuenta"]},
+    {"id": "D09", "titulo": "open redirect en salir", "patrones": ["open redirect", "redirecci[oó]n abierta", "salir[^\\n]{0,60}redirect", "redirect\\(request\\.GET"]},
+    {"id": "D10", "titulo": "SSRF en vista_previa", "patrones": ["SSRF", "vista_previa"]},
+    {"id": "D11", "titulo": "yaml.load (ejecución) en importar", "patrones": ["yaml\\.load", "yaml[^\\n]{0,40}Loader"]},
+    {"id": "D12", "titulo": "pickle.loads en carrito (RCE)", "patrones": ["pickle"]},
+    {"id": "D13", "titulo": "XSS con mark_safe en perfil", "patrones": ["mark_safe", "XSS[^\\n]{0,40}(perfil|mark_safe)"]},
+    {"id": "D14", "titulo": "webhook de pago sin firma", "patrones": ["webhook[^\\n]{0,80}(sin firma|firma|no verifica|X10)", "webhook_pago"]},
+    {"id": "D15", "titulo": "subida con nombre del cliente (path traversal)", "patrones": ["(subida|subir|upload)[^\\n]{0,120}(traversal|nombre|filename|tipo|tama)", "path traversal"]},
+    {"id": "D16", "titulo": "contraseñas con MD5", "patrones": ["MD5", "PASSWORD_HASHERS"]},
+    {"id": "D17", "titulo": "sin SecurityMiddleware ni headers de seguridad", "patrones": ["(headers|cabeceras) de seguridad", "SecurityMiddleware", "SECURE_", "Content-Security-Policy", "\\bHSTS\\b"]},
+    {"id": "D18", "titulo": "CORS abierto con credenciales", "patrones": ["CORS[^\\n]{0,80}(todos|\\*|credencial)", "CORS_ALLOW_ALL_ORIGINS"]},
+    {"id": "D19", "titulo": "dependencias con CVE (Django 3.2, requests 2.19, PyYAML 5.3)", "patrones": ["CVE", "Django[^\\n]{0,20}3\\.2", "pip-audit[^\\n]{0,80}\\d", "sin soporte|desactualiz|fin de soporte"]},
+    {"id": "D20", "titulo": "sin rate limiting (throttling)", "patrones": ["rate limit", "throttl", "sin l[ií]mite de (peticiones|intentos)"]}
+  ],
+  "preguntas": [
+    {"id": "D21", "titulo": "respaldos, logs y topes como preguntas", "patrones": ["❓[^\\n]{0,60}(respaldo|X12)", "❓[^\\n]{0,60}(log|X6)", "❓[^\\n]{0,60}(HTTPS|16)"]}
+  ],
+  "trampas": [
+    {"id": "DT1", "titulo": "mis_pedidos filtra por usuario", "patrones": ["mis_pedidos"]},
+    {"id": "DT2", "titulo": "inicio redirige por nombre de ruta", "patrones": ["\\binicio\\b[^\\n]{0,60}(redirect|open redirect|abierta)"]}
+  ]
+}

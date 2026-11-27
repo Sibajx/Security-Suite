@@ -148,11 +148,13 @@ auditar.
 Los agentes leen resúmenes, no los JSON crudos (`escaneo-compacto.md`); cada auditor recibe solo sus chequeos
 (`chequeos.py`) y consulta las guías de OWASP a demanda (`owasp/INDICE.md`). El modo `incremental` evita volver a
 auditar lo que no cambió, y en presupuesto `economico` el pentester usa un modelo más barato. Los auditores y el
-verificador siempre usan el modelo de la sesión: ahí se juega la calidad.
+verificador siempre usan el modelo de la sesión: ahí se juega la calidad. Medición determinista del ahorro (83% menos contexto por auditor): [`docs/medicion-tokens.md`](docs/medicion-tokens.md) (`tests/medir-lectura.py`).
 
 ## Pruebas
 
-Ejemplos de salida (corridas reales, calificadas): [modo completo](docs/ejemplo-diagnostico.md) · [modo `rapido-ia`](docs/ejemplo-rapido-ia.md).
+Ejemplos de salida (corridas reales, calificadas): [modo completo (FastAPI)](docs/ejemplo-diagnostico.md) · [modo `rapido-ia` (Next.js)](docs/ejemplo-rapido-ia.md) · [auditoría (Django)](docs/ejemplo-django.md).
+
+**Como barrera de CI, sin modelo:** la parte determinista (secretos, reglas de semgrep, Supabase, GraphQL) corre sola en cada push con la [GitHub Action](docs/accion-ci.md).
 
 `tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas**, más una app Next.js + Supabase con 17
 fallas típicas de apps hechas con IA, y una hoja de respuestas para medir la suite

@@ -86,6 +86,39 @@ La app típica que genera una herramienta de IA. Patrones para el calificador en
 Herramientas sin IA (2026-11-26): `supabase-rls.py` encuentra N01, N03, N04, N05 y N15 (MEDIA); con `--publicas productos`
 no marca NT2. Las reglas de semgrep de la suite encuentran N01, N07, N08, N09, N10, N11, N12 y N13, y no marcan NT3.
 
+## Fixture Django + DRF (`crear-fixture-django.sh`, solo estático)
+
+Tercer stack, para comprobar que los auditores no están sesgados a FastAPI/Next. Patrones en `esperado-django.json`.
+
+| ID | Falla | Dónde | Chequeo |
+|---|---|---|---|
+| D01 | `.env` con secretos en el historial de git | commit `inicio` | 3 |
+| D02 | `SECRET_KEY` por defecto y `DEBUG=True` | `tienda/settings.py` | 2, 19 |
+| D03 | `ALLOWED_HOSTS = ["*"]` | idem | 20 |
+| D04 | SQL injection por `%` en `buscar` | `pedidos/views.py` | 9 |
+| D05 | Mass assignment: serializer `fields="__all__"` (usuario, pagado) | `pedidos/serializers.py` | 7/6 |
+| D06 | IDOR en `ver_pedido` (sin filtrar por `request.user`) | `pedidos/views.py` | 6 |
+| D07 | `PedidoViewSet` con `AllowAny` y `queryset` de todos | `pedidos/api.py` | 4/6 |
+| D08 | `@csrf_exempt` en `borrar_cuenta` | `pedidos/views.py` | 14 |
+| D09 | Open redirect en `salir` (`redirect(request.GET["next"])`) | idem | X3 |
+| D10 | SSRF en `vista_previa` | idem | X1 |
+| D11 | `yaml.load(Loader=yaml.Loader)` en `importar` | idem | X2 |
+| D12 | `pickle.loads` en `carrito` | idem | X2 |
+| D13 | XSS con `mark_safe` y dato de usuario en `perfil` | idem | 8 |
+| D14 | Webhook de pago sin verificar firma | idem | X10 |
+| D15 | Subida con `file.name` del cliente, sin tipo ni tamaño | idem | 13 |
+| D16 | `MD5PasswordHasher` como hasher principal | `tienda/settings.py` | 5 |
+| D17 | Sin `SecurityMiddleware` ni `SECURE_*` ni headers | idem | 17 |
+| D18 | `CORS_ALLOW_ALL_ORIGINS=True` con credenciales | idem | 15 |
+| D19 | Dependencias con CVE (Django 3.2.0, requests 2.19.0, PyYAML 5.3, DRF 3.11) | `requirements.txt` | 20 |
+| D20 | Sin throttling de DRF | `tienda/settings.py` | 11 |
+| D21 | Respaldos, logs y topes como **preguntas** | — | X12, X6, 16 |
+
+| ID | Trampa | Por qué es seguro |
+|---|---|---|
+| DT1 | `mis_pedidos` | `get_object_or_404(Pedido, pk=pk, usuario=request.user)` filtra por dueño |
+| DT2 | `inicio` | `redirect("inicio_view")` por nombre de ruta, no por dato del usuario |
+
 ## Puntuación
 
 - **Recall** = V01–V22 y V24–V32 encontradas / 31 (V23 y V33 suman si aparecen como preguntas). V24–V29 requieren el pentest
@@ -109,6 +142,7 @@ y no hizo preguntas (V23). gitleaks solo tampoco detecta V01.
 
 | 2026-11-27 | Opus 5.5 + security-suite v1.2, modo completo | 31/31 + 2/2 preguntas | 0 | 20 de 31 (el resto, por código) | 618k tokens nuevos + 7,8M de caché en los 5 subagentes (sin contar la sesión principal); el verificador no encontró falsos positivos |
 | 2026-11-27 | Opus 5.5 + security-suite v1.2, `rapido-ia` (fixture Next.js) | 17/17 + 1/1 pregunta | 0 | — (solo estático) | 75k nuevos + 979k de caché, un solo agente; encontró además que `profiles` deja editar la columna `rol` (BAJA, válido) |
+| 2026-11-27 | Opus 4.8 + security-suite, 3 auditores (fixture Django) | 20/20 + 1/1 pregunta | 0 | — (modo auditoría) | 314k nuevos + 1,9M de caché; tercer stack, sin sesgo a FastAPI/Next |
 
 Notas de la corrida del 2026-11-27: el calificador se corrigió durante la corrida (contaba como trampas los descartes y
 sumaba la caché al total). `matriz-permisos.py` borró las 3 cuentas demo al ejecutar `GET /cuenta/borrar`: corregido y con

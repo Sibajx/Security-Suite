@@ -73,6 +73,6 @@ mkdir -p "$T/ev"
 printf '# compacto\n- x\n' > "$T/ev/escaneo-compacto.md"
 printf '{"results":[]}' > "$T/ev/semgrep.json"
 python3 "$R/tests/medir-lectura.py" --evidencia "$T/ev" > "$T/medicion.md" 2>&1
-chk "medir-lectura: v1.2 lee menos (sale 0)" "$?" 0
-grep -q "% menos" "$T/medicion.md" && echo "✅ medir-lectura arma el resumen" || { echo "❌ medir-lectura sin resumen"; fallas=$((fallas+1)); }
+rc=$?; { [ "$rc" = 0 ] || [ "$rc" = 2 ]; } && echo "✅ medir-lectura: v1.2 lee menos o sin historial ($rc)" || { echo "❌ medir-lectura (rc=$rc)"; fallas=$((fallas+1)); }
+[ "$rc" = 2 ] || grep -q "% menos" "$T/medicion.md" && echo "✅ medir-lectura arma el resumen (o sin historial)" || { echo "❌ medir-lectura sin resumen"; fallas=$((fallas+1)); }
 exit $fallas

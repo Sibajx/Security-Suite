@@ -39,3 +39,19 @@ jobs:
         run: |
           python3 -m pip install --quiet semgrep==1.187.0
           bash tests/probar-semgrep.sh
+      - name: ci-estatico.sh (barrera de CI)
+        run: bash tests/probar-ci-estatico.sh
+
+  pentest-vivo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Instalar uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Pentest en vivo contra el fixture
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          bash tests/probar-pentest-vivo.sh

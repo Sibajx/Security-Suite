@@ -154,7 +154,9 @@ model: that's where quality is decided. Deterministic measurement of the saving 
 
 ## Tests
 
-Sample output (real, graded runs): [full mode](docs/ejemplo-diagnostico.md) · [`rapido-ia` mode](docs/ejemplo-rapido-ia.md).
+Sample output (real, graded runs): [full mode (FastAPI)](docs/ejemplo-diagnostico.md) · [`rapido-ia` mode (Next.js)](docs/ejemplo-rapido-ia.md) · [audit (Django)](docs/ejemplo-django.md).
+
+**As a model-free CI gate:** the deterministic part (secrets, semgrep rules, Supabase, GraphQL) runs on its own on every push via the [GitHub Action](docs/accion-ci.md).
 
 `tests/` generates a FastAPI app with **31 planted flaws and 6 traps**, plus a Next.js + Supabase app with 17
 flaws typical of AI-built apps, plus an answer sheet, to measure the suite

@@ -1,0 +1,30 @@
+name: "security-suite (barrera estática)"
+description: "Revisión de seguridad determinista (sin modelo) de la suite: secretos en git, reglas de semgrep, Supabase y GraphQL. Falla el CI si hay algo grave."
+author: "Sibajx"
+branding:
+  icon: "shield"
+  color: "green"
+inputs:
+  proyecto:
+    description: "Ruta del proyecto a revisar"
+    required: false
+    default: "."
+  informe:
+    description: "Ruta donde escribir el informe markdown"
+    required: false
+    default: "security-suite-informe.md"
+runs:
+  using: "composite"
+  steps:
+    - name: Instalar herramientas (gitleaks, semgrep)
+      shell: bash
+      run: |
+        python3 -m pip install --quiet semgrep==1.187.0
+        GOBIN="$HOME/.local/bin" go install github.com/zricethezav/gitleaks/v8@v8.21.2 || \
+          echo "gitleaks no se pudo instalar; la revisión de secretos se omitirá"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+    - name: Revisión estática
+      shell: bash
+      run: |
+        bash "${{ github.action_path }}/skills/security-suite/scripts/ci-estatico.sh" \
+          "${{ inputs.proyecto }}" --salida "${{ inputs.informe }}"

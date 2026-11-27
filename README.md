@@ -152,7 +152,9 @@ verificador siempre usan el modelo de la sesión: ahí se juega la calidad. Medi
 
 ## Pruebas
 
-Ejemplos de salida (corridas reales, calificadas): [modo completo](docs/ejemplo-diagnostico.md) · [modo `rapido-ia`](docs/ejemplo-rapido-ia.md).
+Ejemplos de salida (corridas reales, calificadas): [modo completo (FastAPI)](docs/ejemplo-diagnostico.md) · [modo `rapido-ia` (Next.js)](docs/ejemplo-rapido-ia.md) · [auditoría (Django)](docs/ejemplo-django.md).
+
+**Como barrera de CI, sin modelo:** la parte determinista (secretos, reglas de semgrep, Supabase, GraphQL) corre sola en cada push con la [GitHub Action](docs/accion-ci.md).
 
 `tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas**, más una app Next.js + Supabase con 17
 fallas típicas de apps hechas con IA, y una hoja de respuestas para medir la suite

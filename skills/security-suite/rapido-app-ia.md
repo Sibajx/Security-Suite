@@ -26,7 +26,7 @@ El orden va por daño probable en este tipo de apps: primero lo que expone a tod
 | 11 | Inyectar instrucciones al chatbot | X11 | system prompt, herramientas, RAG, a dónde va la respuesta (código y reglas de semgrep `llm-*`) | — |
 | 12 | Script en el perfil (XSS guardado) | 8 | `dangerouslySetInnerHTML`, markdown sin sanitizar, regla `security-suite.llm-salida-a-html` | 3 |
 | 13 | Web shell disfrazada de foto | 13 | bucket de Storage público con `.html`/`.svg` servidos desde tu dominio; tipo por extensión | 3 |
-| 14 | Inyección SQL | 9 | funciones RPC/`execute` con SQL armado con texto; Edge Functions con template strings | 2 |
+| 14 | Inyección SQL | 9 | funciones RPC/`execute` con SQL armado con texto; Edge Functions con template strings. Si hay GraphQL: `graphql-revisar.py` (X13) | 2 |
 | 15 | Ransomware y 3 semanas sin logs | X12, X6 | ¿respaldos fuera del proveedor e inmutables? ¿logs de auth y alertas? → casi siempre ❓ | — |
 
 ## Supabase / Firebase en vivo (ataque 1), sin extraer datos

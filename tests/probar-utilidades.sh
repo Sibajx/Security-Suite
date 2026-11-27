@@ -67,4 +67,12 @@ kill $SRV 2>/dev/null
 chk "matriz: visita la ruta de lectura" "$(grep -c '^/pedidos/1$' "$T/visitas.log")" 2
 chk "matriz: NO visita GET /cuenta/borrar (escritura_ok false)" "$(grep -c 'borrar' "$T/visitas.log")" 0
 chk "matriz: NO visita GET /logout (destructiva sin permiso)" "$(grep -c 'logout' "$T/visitas.log")" 0
+
+# medir-lectura.py: la v1.2 lee menos contexto que la v1.1 (sale 0) y arma la tabla
+mkdir -p "$T/ev"
+printf '# compacto\n- x\n' > "$T/ev/escaneo-compacto.md"
+printf '{"results":[]}' > "$T/ev/semgrep.json"
+python3 "$R/tests/medir-lectura.py" --evidencia "$T/ev" > "$T/medicion.md" 2>&1
+chk "medir-lectura: v1.2 lee menos (sale 0)" "$?" 0
+grep -q "% menos" "$T/medicion.md" && echo "✅ medir-lectura arma el resumen" || { echo "❌ medir-lectura sin resumen"; fallas=$((fallas+1)); }
 exit $fallas

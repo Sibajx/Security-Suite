@@ -150,7 +150,7 @@ The agents **never modify** your project. Fixes are made by the main session, wi
 Agents read summaries, not raw JSON (`escaneo-compacto.md`); each auditor only gets its own checks (`chequeos.py`)
 and reads the OWASP guides on demand (`owasp/INDICE.md`). `incremental` mode skips re-auditing what didn't change,
 and the `economico` budget runs the pentester on a cheaper model. Auditors and the verifier always use the session's
-model: that's where quality is decided.
+model: that's where quality is decided. Deterministic measurement of the saving (83% less context per auditor): [`docs/medicion-tokens.md`](docs/medicion-tokens.md) (`tests/medir-lectura.py`).
 
 ## Tests
 

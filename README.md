@@ -148,7 +148,7 @@ auditar.
 Los agentes leen resúmenes, no los JSON crudos (`escaneo-compacto.md`); cada auditor recibe solo sus chequeos
 (`chequeos.py`) y consulta las guías de OWASP a demanda (`owasp/INDICE.md`). El modo `incremental` evita volver a
 auditar lo que no cambió, y en presupuesto `economico` el pentester usa un modelo más barato. Los auditores y el
-verificador siempre usan el modelo de la sesión: ahí se juega la calidad.
+verificador siempre usan el modelo de la sesión: ahí se juega la calidad. Medición determinista del ahorro (83% menos contexto por auditor): [`docs/medicion-tokens.md`](docs/medicion-tokens.md) (`tests/medir-lectura.py`).
 
 ## Pruebas
 

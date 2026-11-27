@@ -29,6 +29,8 @@ jobs:
         run: bash tests/probar-webhook.sh
       - name: supabase-rls.py
         run: bash tests/probar-supabase-rls.sh
+      - name: graphql-revisar.py
+        run: bash tests/probar-graphql.sh
       - name: calificar.py
         run: bash tests/probar-calificar.sh
       - name: chequeos.py, resumir-escaneo.py y cambios-desde.py

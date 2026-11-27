@@ -15,7 +15,7 @@ Estados por chequeo: ✅ cumple · ❌ falla · ⚠️ parcial · N/A no aplica 
 |---|---|
 | `infra-secretos` | 1, 2, 3, 16, 17, 19, 20, X5, X6, X7, X8, X9, X12 |
 | `acceso` | 4, 5, 6, 10, 11, 12, X4, X10 |
-| `entradas` | 7, 8, 9, 13, 14, 15, 18, X1, X2, X3, X11 |
+| `entradas` | 7, 8, 9, 13, 14, 15, 18, X1, X2, X3, X11, X13 |
 | `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19), códigos cortos (11), webhook sin firma (X10) |
 
 ---
@@ -185,3 +185,16 @@ alcanza. Un respaldo cuenta solo si:
 - las cuentas del hosting, la base y el almacenamiento tienen 2FA.
 Casi nada de esto se ve en el código → ❓ con preguntas concretas (dónde, cada cuánto, quién puede borrarlos,
 última restauración probada).
+
+**X13. GraphQL — ALTA (CRÍTICA si un resolver filtra datos de otros usuarios).** Si la app expone GraphQL (Apollo,
+graphql-yoga, Hasura, PostGraphile, Strawberry, Graphene, Ariadne, @nestjs/graphql):
+- **Introspección** apagada en producción (o detrás de auth): con ella cualquiera descarga todo el esquema. En
+  desarrollo está bien.
+- **Límite de profundidad y de costo/complejidad**: sin él, una consulta anidada (`a{ b{ a{ b…}}}`) tumba el
+  servidor (DoS). Usar `graphql-depth-limit`, `graphql-armor`, análisis de costo o el límite de Hasura.
+- **Autorización por campo/objeto**: cada resolver que recibe un id filtra por el usuario de la sesión (no basta con
+  exigir login). GraphQL es un IDOR/BOLA fácil porque expone muchos tipos de golpe → CRÍTICA si devuelve lo ajeno.
+- **Batching y alias**: limitar el número de operaciones y de alias por petición, o la fuerza bruta de login/OTP se
+  hace con un solo POST (`a1: login(...) a2: login(...) …`).
+- **Errores**: sin stack traces ni rutas internas al cliente; desactivar el playground/GraphiQL en producción.
+Script: `scripts/graphql-revisar.py` (estático + introspección y profundidad en vivo, sin extraer datos).

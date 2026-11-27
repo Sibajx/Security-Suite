@@ -97,10 +97,10 @@ def main():
     if not os.path.isdir(a.evidencia):
         print(f"No existe {a.evidencia}", file=sys.stderr); sys.exit(2)
     tok = lambda n: round(n / 4)
+    if not contenido(a.viejo, f"{SK}/SecurityChecks.md"):
+        print(f"No se pudo leer la versión {a.viejo} (¿checkout sin historial? usa fetch-depth: 0).", file=sys.stderr); sys.exit(2)
     viejo, tv = medir(a.viejo, a.evidencia, nuevo=False)
     nuevo, tn = medir(a.nuevo, a.evidencia, nuevo=True)
-    if tv == 0:
-        print(f"No se pudo leer la versión {a.viejo} (¿checkout sin historial? usa fetch-depth: 0).", file=sys.stderr); sys.exit(2)
     print(f"# Contexto que lee cada auditor — {a.viejo[:10]} (v1.1) vs {a.nuevo[:10]} (v1.2)\n")
     print("Tokens ≈ caracteres/4. 'checks' = SecurityChecks completo vs solo los del agente; "
           "'owasp' = guías por adelantado vs INDICE; 'escaneo' = JSON crudos vs escaneo-compacto.md.\n")

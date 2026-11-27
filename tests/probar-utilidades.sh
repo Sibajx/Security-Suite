@@ -42,4 +42,29 @@ echo z >> "$T/g/api/webhook.ts"
 python3 "$S/cambios-desde.py" "$T/g" "$T/base.md" > "$T/cambios.md"; chk "base reciente sale 0" "$?" 0
 chk "el webhook va a acceso" "$(grep -c '^- \*\*acceso\*\* (1): `api/webhook.ts`' "$T/cambios.md")" 1
 chk "infra-secretos se hereda" "$(grep -c 'se heredan sus resultados): infra-secretos' "$T/cambios.md")" 1
+
+# matriz-permisos.py: nunca toca un GET marcado "escritura_ok": false ni un GET destructivo (incidente 2026-11-27)
+cat > "$T/srv.py" <<'PY'
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+class H(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        open(sys.argv[2], "a").write(self.path + "\n")
+        self.send_response(200); self.end_headers(); self.wfile.write(b"{}")
+HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()
+PY
+P=${PUERTO_MATRIZ:-8795}; python3 "$T/srv.py" "$P" "$T/visitas.log" & SRV=$!
+for _ in $(seq 1 50); do python3 -c "import socket; socket.create_connection(('127.0.0.1', $P), 1)" 2>/dev/null && break; sleep 0.1; done
+cat > "$T/matriz.json" <<J
+{"base": "http://127.0.0.1:$P", "roles": {"anonimo": {}, "usuario_a": {}},
+ "pruebas": [{"metodo": "GET", "ruta": "/pedidos/1", "permitidos": ["usuario_a"]},
+             {"metodo": "GET", "ruta": "/cuenta/borrar", "permitidos": ["usuario_a"], "escritura_ok": false},
+             {"metodo": "GET", "ruta": "/logout", "permitidos": ["usuario_a"]}]}
+J
+python3 "$S/matriz-permisos.py" "$T/matriz.json" --nivel 3 --rps 50 > "$T/matriz.md" 2>&1
+kill $SRV 2>/dev/null
+chk "matriz: visita la ruta de lectura" "$(grep -c '^/pedidos/1$' "$T/visitas.log")" 2
+chk "matriz: NO visita GET /cuenta/borrar (escritura_ok false)" "$(grep -c 'borrar' "$T/visitas.log")" 0
+chk "matriz: NO visita GET /logout (destructiva sin permiso)" "$(grep -c 'logout' "$T/visitas.log")" 0
 exit $fallas

@@ -44,6 +44,6 @@ Guías a demanda (`SKILL/owasp/INDICE.md`): `authentication.md`, `authorization.
 10. **Borrador para el pentester**: escribe `ESCANEO/matriz.json` (formato en la cabecera de
     `SKILL/scripts/matriz-permisos.py`) con las rutas de la tabla del paso 1 que reciben un ID o son de admin, y en
     `permitidos` quién DEBERÍA entrar según el código (roles `anonimo`, `usuario_a`, `usuario_b`, `admin`; un recurso de
-    `usuario_a` lleva `"nota"`). Rutas que escriben: `"escritura_ok": false`. Lista también en tu reporte los **flujos
+    `usuario_a` lleva `"nota"`). Rutas que escriben **incluidos los GET que cambian estado** (`GET /cuenta/borrar`, `/logout`): `"escritura_ok": false` (la herramienta no las toca). Lista también en tu reporte los **flujos
     sensibles** (canjes, checkout, cupones, recuperación de contraseña) con sus pasos, para `carrera.py` y `flujo.py`.
 11. Entrega con el formato del contrato **más la tabla del paso 1**. Prefijo `A`.

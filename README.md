@@ -89,7 +89,6 @@ Cada corrida agrega una fecha nueva, así ves si el sitio mejoró.
 | `fuzz-api.sh` | Fuzzing de la API desde su OpenAPI (Schemathesis); solo local/staging | 3 |
 | `supabase-rls.py` | Supabase/Firebase: tablas sin RLS, `using (true)`, rol desde `user_metadata`, service_role pública; en vivo solo **cuenta** filas (HEAD, sin descargar datos) | 0–2 |
 | `webhook-falso.py` | Manda tu webhook de pago sin firma y con firma falsa (Stripe, Mercado Pago, PayPal): ¿lo marca como pagado? | 3 |
-| `chatbot-inyeccion.py` | 8 mensajes inofensivos a tu chatbot: fuga del system prompt, datos de otro usuario, HTML crudo, exfiltración por imagen | 2 |
 | `revisar-access.py` | Políticas de Cloudflare Access que en realidad dejan entrar a cualquiera (Include con PIN, Everyone, gmail.com…) | 0 (lee la config) |
 | `reverificar.py` | Después de arreglar: vuelve a correr la reproducción de cada hallazgo (`evidencia/repro/`) y arma la tabla antes → ahora | el del repro |
 | `vigia.sh` + `instalar-vigia.sh` | Revisión semanal pasiva de todos tus sitios y aviso de lo que cambió (`VIGIA.md`) | 1 |
@@ -153,7 +152,7 @@ verificador siempre usan el modelo de la sesión: ahí se juega la calidad.
 
 ## Pruebas
 
-Ejemplo de salida: [`docs/ejemplo-diagnostico.md`](docs/ejemplo-diagnostico.md).
+Ejemplos de salida (corridas reales, calificadas): [modo completo](docs/ejemplo-diagnostico.md) · [modo `rapido-ia`](docs/ejemplo-rapido-ia.md).
 
 `tests/` genera una app FastAPI con **31 fallas plantadas y 6 trampas**, más una app Next.js + Supabase con 17
 fallas típicas de apps hechas con IA, y una hoja de respuestas para medir la suite

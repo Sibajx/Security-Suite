@@ -16,7 +16,7 @@ Estados por chequeo: ✅ cumple · ❌ falla · ⚠️ parcial · N/A no aplica 
 | `infra-secretos` | 1, 2, 3, 16, 17, 19, 20, X5, X6, X7, X8, X9, X12 |
 | `acceso` | 4, 5, 6, 10, 11, 12, X4, X10 |
 | `entradas` | 7, 8, 9, 13, 14, 15, 18, X1, X2, X3, X11 |
-| `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19), códigos cortos (11), webhook sin firma (X10), chatbot (X11) |
+| `pentester` | confirma en vivo cualquier chequeo; dueño en vivo de 11, 16, 17, 18; herramientas: matriz de permisos (4–6), JWT (5), carrera y flujos (X4), fuzzing (7, 19), códigos cortos (11), webhook sin firma (X10) |
 
 ---
 
@@ -114,6 +114,10 @@ por URL) → lista blanca de hosts, bloquear IPs privadas/metadatos, sin seguir 
 `subprocess(shell=True)`, `child_process.exec`, plantillas renderizadas desde texto del usuario.
 
 **X3. Path traversal / open redirect — ALTA/MEDIA.** Rutas de archivo o redirecciones construidas con datos del usuario.
+Incluye el **open redirect del navegador**: una SPA que toma un trozo de la ruta, el hash o la query y lo usa como
+destino (`window.location = ...`, `location.assign(...)`), p. ej. `app.com/#/vivo/https://evil.com`. Sirve para
+phishing con tu dominio y, en un login/OAuth, para robar el token y entrar a la cuenta. Aceptar solo rutas internas
+(empiezan con `/` y no con `//`) o una lista blanca.
 
 **X4. Lógica de negocio — ALTA.** Condiciones de carrera en saldos/puntos/canjes, pasos de un flujo que se pueden
 saltar, precios, descuentos o cantidades que manda el cliente (el total se recalcula en el servidor desde la base),

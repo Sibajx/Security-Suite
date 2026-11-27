@@ -34,6 +34,7 @@ webhook-sin-firma-js casos/casos.js:1
 llm-salida-a-html casos/casos.js:7
 codigo-con-random-js casos/casos.js:9
 prisma-por-id-sin-dueno casos/casos.ts:6
+redirect-abierto-cliente casos/casos.ts:14
 """.split("\n")[1:-1])
 faltan, sobran = sorted(set(esperado) - set(obtenido)), sorted(set(obtenido) - set(esperado))
 for x in esperado:

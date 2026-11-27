@@ -23,13 +23,17 @@ Formato de matriz.json:
   ]
 }
 
-Reglas: solo GET/HEAD/OPTIONS salvo que la prueba tenga "escritura_ok": true **y** --nivel 3
+Reglas: solo GET/HEAD/OPTIONS salvo que la prueba tenga "escritura_ok": true **y** --nivel 3. Una ruta con
+"escritura_ok": false se salta SIEMPRE, aunque sea GET, y también un GET con nombre destructivo (borrar, logout…)
+que no tenga "escritura_ok": true: un GET que borra la cuenta la borraría con cada rol.
 (y entonces solo con cuentas pentest-*). Un rol NO permitido que recibe 2xx = ❌ acceso indebido.
 """
 import argparse, json, os, re, sys, time, urllib.error, urllib.request
 
 UA = "security-suite/1.0 (auditoria autorizada)"
 SEGUROS = {"GET", "HEAD", "OPTIONS"}
+# Un GET también puede escribir (GET /cuenta/borrar). Sin "escritura_ok": true explícito, estas rutas no se tocan.
+DESTRUCTIVA = re.compile(r"(?i)(borrar|eliminar|delete|remove|destroy|logout|salir|cerrar-sesion|cancel|reset|revocar|revoke|unsubscribe|baja)")
 
 
 def expandir(v):
@@ -75,7 +79,7 @@ def plantilla(url_openapi):
             if m not in {"GET", "POST", "PUT", "PATCH", "DELETE"}:
                 continue
             p = {"metodo": m, "ruta": re.sub(r"\{[^}]+\}", "1", ruta), "permitidos": ["?"]}
-            if m not in SEGUROS:
+            if m not in SEGUROS or DESTRUCTIVA.search(ruta):
                 p["escritura_ok"] = False
             pruebas.append(p)
     print(json.dumps({"base": base, "headers_comunes": {},
@@ -108,8 +112,10 @@ def main():
     filas, malos, raros, omitidas = [], [], [], []
     for p in cfg["pruebas"]:
         metodo = p.get("metodo", "GET").upper()
-        if metodo not in SEGUROS and not (p.get("escritura_ok") and a.nivel >= 3):
-            omitidas.append(f"{metodo} {p['ruta']} (escritura: requiere nivel 3 y \"escritura_ok\": true)")
+        escribe = metodo not in SEGUROS or p.get("escritura_ok") is False or DESTRUCTIVA.search(p["ruta"])
+        if escribe and not (p.get("escritura_ok") is True and a.nivel >= 3):
+            omitidas.append(f"{metodo} {p['ruta']} (escribe o puede escribir: requiere nivel 3 y \"escritura_ok\": true; "
+                            "aun así, nunca con cuentas que no sean de prueba)")
             continue
         permitidos = set(p.get("permitidos", []))
         celdas, cuerpos = [], {}

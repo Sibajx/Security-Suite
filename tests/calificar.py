@@ -17,6 +17,8 @@ import argparse, glob, json, os, re, subprocess, sys
 
 DESCARTE = re.compile(r"^#{2,4} .*(descart|no son fallas|trampas)", re.I)
 SEVERIDAD = re.compile(r"CR[IÍ]TICA|\bALTA\b|\bMEDIA\b|\bBAJA\b|❌")
+# Un bloque que menciona la trampa para decir que es segura no cuenta como reportarla.
+EXCULPA = re.compile(r"descartad|correct[oa]\b|a prop[oó]sito|no es (una )?falla|es segur|s[ií] verifica|bien hecho|trampa", re.I)
 
 
 def secciones(texto):
@@ -47,11 +49,16 @@ def secretos_del_fixture(fixture):
     try:
         primero = subprocess.run(["git", "-C", fixture, "rev-list", "--max-parents=0", "HEAD"],
                                  capture_output=True, text=True).stdout.split()[0]
-        env = subprocess.run(["git", "-C", fixture, "show", f"{primero}:.env"], capture_output=True, text=True).stdout
+        env = "".join(subprocess.run(["git", "-C", fixture, "show", f"{primero}:{f}"], capture_output=True, text=True).stdout
+                      for f in (".env", ".env.local"))
         for linea in env.splitlines():
-            v = linea.partition("=")[2].strip()
+            nombre, _, v = linea.partition("=")
+            v = v.strip()
             m = re.search(r":([0-9a-f]{16,})@", v)  # contraseña dentro de DATABASE_URL
-            vals.update(x for x in ([m.group(1)] if m else []) + [v] if len(x) >= 16)
+            if m:
+                vals.add(m.group(1))
+            if re.search(r"KEY|SECRET|TOKEN|PASS", nombre) and len(v) >= 16:
+                vals.add(v)
     except (IndexError, OSError):
         pass
     cfg = os.path.join(fixture, "frontend/src/config.js")
@@ -81,7 +88,8 @@ def tokens(rutas):
                 total["salida"] += u.get("output_tokens", 0) or 0
                 total["cache_escrita"] += u.get("cache_creation_input_tokens", 0) or 0
                 total["cache_leida"] += u.get("cache_read_input_tokens", 0) or 0
-    total["total"] = sum(total.values())
+    total["nuevos"] = total["entrada"] + total["salida"] + total["cache_escrita"]
+    total["total"] = total["nuevos"] + total["cache_leida"]
     return total if vistos else None
 
 
@@ -104,7 +112,14 @@ def main():
 
     fallas = [(f["id"], f["titulo"], alguna(f["patrones"], limpio)) for f in esperado["fallas"]]
     preguntas = [(p["id"], p["titulo"], alguna(p["patrones"], texto)) for p in esperado.get("preguntas", [])]
-    trampas = [(t["id"], t["titulo"], any(alguna(t["patrones"], b) and SEVERIDAD.search(b) for b in bloques))
+    def acusa(patrones, b):  # el patrón aparece con severidad y sin frase que lo declare seguro cerca
+        for p in patrones:
+            for m in re.finditer(p, b, re.I):
+                cerca = b[max(0, m.start() - 60):m.end() + 120]
+                if SEVERIDAD.search(b) and not EXCULPA.search(cerca):
+                    return True
+        return False
+    trampas = [(t["id"], t["titulo"], any(acusa(t["patrones"], b) for b in bloques))
                for t in esperado["trampas"]]
 
     # higiene: secretos completos en el reporte o en su evidencia
@@ -138,8 +153,8 @@ def main():
          + (f" ({', '.join(res['trampas_reportadas'])})" if res["trampas_reportadas"] else ""),
          f"- **Secretos completos en el reporte:** " + (("❌ " + "; ".join(fugas)) if fugas else
                                                        ("ninguno ✅" if a.fixture else "no revisado (falta --fixture)")),
-         f"- **Tokens:** " + (f"{tok['total']:,} (entrada {tok['entrada']:,} · salida {tok['salida']:,} · caché escrita "
-                              f"{tok['cache_escrita']:,} · caché leída {tok['cache_leida']:,})" if tok else
+         f"- **Tokens:** " + (f"{tok['nuevos']:,} nuevos (entrada {tok['entrada']:,} · salida {tok['salida']:,} · caché escrita "
+                              f"{tok['cache_escrita']:,}) + {tok['cache_leida']:,} leídos de caché (cuestan ~10 %)" if tok else
                               "sin transcripciones (--transcript)"),
          "", "| ID | Falla | ¿Encontrada? |", "|---|---|---|"]
     L += [f"| {i} | {t} | {'✅' if ok else '— revisar a mano'} |" for i, t, ok in fallas + preguntas]
@@ -147,7 +162,7 @@ def main():
     L += [f"| {i} | {t} | {'❌ sí' if ok else '✅ no'} |" for i, t, ok in trampas]
     L += ["", "Fila para `tests/esperado.md` → «Resultados registrados»:", "",
           f"`| <fecha> | <modelo> | {res['recall']} | {len(res['trampas_reportadas'])} | <confirmadas> | "
-          f"{(str(round(tok['total'] / 1000)) + 'k tokens') if tok else '—'} |`"]
+          f"{(str(round(tok['nuevos'] / 1000)) + 'k nuevos + ' + str(round(tok['cache_leida'] / 1000)) + 'k caché') if tok else '—'} |`"]
     print("\n".join(L))
 
 

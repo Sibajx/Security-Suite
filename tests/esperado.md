@@ -78,7 +78,7 @@ La app típica que genera una herramienta de IA. Patrones para el calificador en
 
 | ID | Trampa | Por qué es seguro |
 |---|---|---|
-| NT1 | `profiles` | RLS con `auth.uid() = id` |
+| NT1 | `profiles` | RLS con `auth.uid() = id` (que el usuario pueda editar su columna `rol` sí es un hallazgo válido, BAJA) |
 | NT2 | `productos` con `using (true)` para select | catálogo público a propósito, sin políticas de escritura |
 | NT3 | `app/api/webhooks/lemon` | HMAC del cuerpo crudo con `timingSafeEqual` |
 | NT4 | anon key en el bundle | es pública por diseño; lo que protege es la RLS |
@@ -107,6 +107,13 @@ y no hizo preguntas (V23). gitleaks solo tampoco detecta V01.
 | 2026-11-09 | sin skill (línea base) | ~20/22 | 0 | — | no vio V01 ni hizo preguntas |
 | 2026-11-09 | Opus 5.5 + security-suite v1 | 22/22 + preguntas | 0 | 14/14 probadas | verificador ajustó 6 severidades; XSS bajó a MEDIA porque el fixture no tenía escritura de reseñas (corregido después) |
 
+| 2026-11-27 | Opus 5.5 + security-suite v1.2, modo completo | 31/31 + 2/2 preguntas | 0 | 20 de 31 (el resto, por código) | 618k tokens nuevos + 7,8M de caché en los 5 subagentes (sin contar la sesión principal); el verificador no encontró falsos positivos |
+| 2026-11-27 | Opus 5.5 + security-suite v1.2, `rapido-ia` (fixture Next.js) | 17/17 + 1/1 pregunta | 0 | — (solo estático) | 75k nuevos + 979k de caché, un solo agente; encontró además que `profiles` deja editar la columna `rol` (BAJA, válido) |
+
+Notas de la corrida del 2026-11-27: el calificador se corrigió durante la corrida (contaba como trampas los descartes y
+sumaba la caché al total). `matriz-permisos.py` borró las 3 cuentas demo al ejecutar `GET /cuenta/borrar`: corregido y con
+prueba. Sin una corrida de v1.1 con la misma medición, todavía no hay comparación de ahorro antes/después.
+
 ### Herramientas de nivel 2–3 (2026-11-10, fixture en :8766)
 
 | Herramienta | Encontró | Falsos positivos |
@@ -124,4 +131,3 @@ y no hizo preguntas (V23). gitleaks solo tampoco detecta V01.
 | `webhook-falso.py` | V30 (sin firma y con firma Stripe falsa → 200; el pedido 2 quedó `pagado = 1`) | 0 (T6 → 401 en las dos pruebas) |
 | ≤ 10 códigos erróneos con `curl` | V31 (10 × 400 sin bloqueo; el código correcto siguió sirviendo) | — |
 | reglas de semgrep de la suite | V30 (`webhook-sin-firma`), V31 (`codigo-con-random`) | 0 (T6 no marcado) |
-| `chatbot-inyeccion.py` | probado con un servidor falso en `tests/probar-webhook-chatbot.sh` (V32 necesita LLM real) | — |

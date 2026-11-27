@@ -86,7 +86,6 @@ por impacto/esfuerzo, y apunta a la plantilla lista cuando exista.
 - RAG: filtrar documentos por usuario/tenant en la consulta al índice, antes del modelo.
 - Respuesta pintada como texto (`textContent`) o markdown sanitizado (DOMPurify) sin imágenes remotas.
 - Endpoint con sesión, rate limit, `max_tokens` y tope diario por usuario.
-- Prueba: `scripts/chatbot-inyeccion.py` en cada cambio del prompt o de las herramientas.
 
 ## APIs de pago (LLM, WhatsApp, SMS, correo)
 

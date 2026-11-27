@@ -23,7 +23,7 @@
     {"id": "N18", "titulo": "respaldos, logs y topes de gasto como preguntas", "patrones": ["❓[^\\n]{0,60}(respaldo|X12)", "❓[^\\n]{0,60}(log|X6)", "❓[^\\n]{0,60}(tope|gasto|12)"]}
   ],
   "trampas": [
-    {"id": "NT1", "titulo": "profiles con auth.uid() = id", "patrones": ["profiles"]},
+    {"id": "NT1", "titulo": "profiles con auth.uid() = id (la lectura y edición propias son correctas; que el usuario pueda editar su columna rol sí es un hallazgo válido, BAJA)", "patrones": ["profiles[^\\n]{0,100}(sin RLS|IDOR|ajen|de otros|cualquier usuario lee)"]},
     {"id": "NT2", "titulo": "catálogo productos público a propósito", "patrones": ["productos[^\\n]{0,80}using \\(true\\)", "catalogo publico"]},
     {"id": "NT3", "titulo": "webhook de Lemon Squeezy con HMAC y timingSafeEqual", "patrones": ["webhooks?/lemon", "Lemon"]},
     {"id": "NT4", "titulo": "anon key en el bundle (es pública por diseño)", "patrones": ["ANON_KEY[^\\n]{0,80}(expuesta|filtrad|secreto)"]}

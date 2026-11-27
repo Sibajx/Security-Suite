@@ -114,6 +114,10 @@ por URL) → lista blanca de hosts, bloquear IPs privadas/metadatos, sin seguir 
 `subprocess(shell=True)`, `child_process.exec`, plantillas renderizadas desde texto del usuario.
 
 **X3. Path traversal / open redirect — ALTA/MEDIA.** Rutas de archivo o redirecciones construidas con datos del usuario.
+Incluye el **open redirect del navegador**: una SPA que toma un trozo de la ruta, el hash o la query y lo usa como
+destino (`window.location = ...`, `location.assign(...)`), p. ej. `app.com/#/vivo/https://evil.com`. Sirve para
+phishing con tu dominio y, en un login/OAuth, para robar el token y entrar a la cuenta. Aceptar solo rutas internas
+(empiezan con `/` y no con `//`) o una lista blanca.
 
 **X4. Lógica de negocio — ALTA.** Condiciones de carrera en saldos/puntos/canjes, pasos de un flujo que se pueden
 saltar, precios, descuentos o cantidades que manda el cliente (el total se recalcula en el servidor desde la base),

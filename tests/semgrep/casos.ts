@@ -8,3 +8,10 @@ export async function GET(req, { params }) {
   const s = await stripe.checkout.sessions.create({ line_items: [{ price_data: { unit_amount: precio } }] });
   return NextResponse.redirect(new URL("/gracias", req.url));
 }
+
+export function Redir(params) {
+  // open redirect en el cliente (X3)
+  window.location.href = params.next;   // redirect-abierto-cliente
+  location.assign(ruta);                // seguro: 'ruta' no parece URL de usuario
+  window.location.href = "/inicio";     // seguro
+}

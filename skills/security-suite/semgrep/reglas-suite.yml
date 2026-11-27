@@ -199,6 +199,27 @@ rules:
       - pattern: RedirectResponse($X, ...)
       - pattern: HttpResponseRedirect($X)
 
+  - id: security-suite.redirect-abierto-cliente
+    message: >-
+      X3: open redirect en el navegador. La app manda a una URL que sale de la ruta, el hash o la query (p. ej. una
+      SPA con `#/vivo/https://evil.com`). Sirve para phishing con tu dominio y, en un login/OAuth, para robar el token
+      y tomar la cuenta. Aceptar solo rutas internas (empiezan con "/" y no con "//") o una lista blanca de destinos.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata: {chequeo: X3, categoria: redireccion}
+    patterns:
+      - pattern-either:
+          - pattern: window.location = $X
+          - pattern: window.location.href = $X
+          - pattern: location.href = $X
+          - pattern: window.location.assign($X)
+          - pattern: location.assign($X)
+          - pattern: window.location.replace($X)
+          - pattern: location.replace($X)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(param|hash|search|query|next|redirect|return|callback|continue|dest|\bto\b|\burl\b).*
+
   - id: security-suite.supabase-por-id-sin-dueno
     message: >-
       6: consulta a Supabase por id sin filtrar por el usuario. Si este cliente es service_role (servidor) o la RLS no

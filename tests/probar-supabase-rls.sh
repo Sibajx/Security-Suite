@@ -19,6 +19,10 @@ grep "profiles" "$T/est.md" | grep -v "Tablas conocidas" | grep -q . && { echo "
 
 mkdir -p "$T/bien/supabase/migrations"
 printf 'create table public.notas (id int, usuario uuid);\nalter table public.notas enable row level security;\ncreate policy "mias" on public.notas for select using (usuario = auth.uid());\n' > "$T/bien/supabase/migrations/1.sql"
+mkdir -p "$T/comillas/supabase/migrations"
+printf 'create table "public"."secretos" (id int, dato text);\n' > "$T/comillas/supabase/migrations/1.sql"
+python3 "$S" "$T/comillas" > "$T/comillas.md" 2>&1; chk "tabla con esquema entre comillas sin RLS: falla (1)" "$?" 1
+grep -q "secretos" "$T/comillas.md" && echo "✅ detecta la tabla con \"public\".\"x\" sin RLS" || { echo "❌ no detectó la tabla entre comillas"; fallas=$((fallas+1)); }
 python3 "$S" "$T/bien" >/dev/null; chk "proyecto con RLS correcta: sale 0" "$?" 0
 mkdir -p "$T/nada"; python3 "$S" "$T/nada" >/dev/null; chk "sin Supabase ni Firebase: sale 2" "$?" 2
 

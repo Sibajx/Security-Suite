@@ -54,6 +54,7 @@ bash SKILL/scripts/en-vivo.sh <url> > "$R/evidencia/en-vivo.md"     # solo si ha
 bash SKILL/scripts/subdominios.sh <dominio-raíz> "$R/evidencia/subdominios.md"   # dominio propio: superficie (X7)
 bash SKILL/scripts/correo-dns.sh <dominio-raíz> > "$R/evidencia/correo-dns.md"  # suplantación de correo (X8)
 python3 SKILL/scripts/supabase-rls.py <proyecto> --salida "$R/evidencia/supabase.md"  # si usa Supabase/Firebase (10, 1, 6)
+python3 SKILL/scripts/graphql-revisar.py <proyecto> --salida "$R/evidencia/graphql.md"  # si usa GraphQL (X13)
 ```
 `escaneo.sh` deja `escaneo-compacto.md` (semgrep, gitleaks y dependencias resumidos): es lo que leen los agentes.
 Si el dominio está en Cloudflare y tienes acceso a la cuenta (MCP o API, solo lectura): baja

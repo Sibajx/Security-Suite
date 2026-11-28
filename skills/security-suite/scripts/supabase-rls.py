@@ -44,8 +44,13 @@ def leer(r):
 
 
 def nombre_tabla(t):
-    t = t.strip('"').lower()
-    return t.split(".", 1)[1].strip('"') if t.startswith(("public.", '"public".')) else (None if "." in t else t)
+    # Normaliza "public"."orders" / public.orders / "orders" → orders; otro esquema → None.
+    partes = [p.strip().strip('"').lower() for p in t.strip().split(".")]
+    if len(partes) == 1:
+        return partes[0] or None
+    if len(partes) == 2 and partes[0] == "public":
+        return partes[1] or None
+    return None  # esquema distinto de public
 
 
 def estatico(proyecto, publicas):

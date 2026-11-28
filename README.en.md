@@ -27,7 +27,7 @@ plus senior-level extras:
 
 | Secrets | Access | Inputs | Infra | Extras |
 |---|---|---|---|---|
-| 1 hidden API keys · 2 env vars · 3 keys in git (history) | 4 admin route · 5 auth · 6 permissions/IDOR · 10 DB rules · 11 rate limiting · 12 spend cap | 7 validation · 8 XSS · 9 SQL injection · 13 uploads · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 production config | SSRF · deserialization/RCE · path traversal · business logic · CI/CD · logging and monitoring · subdomains · email/DNS · Cloudflare Access policies · **payment webhooks** · **chatbots and LLMs** · **ransomware-proof backups** |
+| 1 hidden API keys · 2 env vars · 3 keys in git (history) | 4 admin route · 5 auth · 6 permissions/IDOR · 10 DB rules · 11 rate limiting · 12 spend cap | 7 validation · 8 XSS · 9 SQL injection · 13 uploads · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 production config | SSRF · deserialization/RCE · path traversal · business logic · CI/CD · logging and monitoring · subdomains · email/DNS · Cloudflare Access policies · **payment webhooks** · **chatbots and LLMs** · **ransomware-proof backups** · **GraphQL** |
 
 ## Install
 
@@ -92,6 +92,7 @@ Each run adds a new date, so you can see whether the site improved.
 | `grabar-flujo.py` + `flujo.py` | Records a flow with Playwright and tries skipping steps, repeating the last one, starting midway | 3 |
 | `fuzz-api.sh` | API fuzzing from its OpenAPI (Schemathesis); local/staging only | 3 |
 | `supabase-rls.py` | Supabase/Firebase: tables without RLS, `using (true)`, role from `user_metadata`, public service_role; live it only **counts** rows (HEAD, no data downloaded) | 0–2 |
+| `graphql-revisar.py` | GraphQL: open introspection, no depth limit, playground; live it sends one introspection and one benign nested query, no data extracted | 0–2 |
 | `webhook-falso.py` | Sends your payment webhook an unsigned event and one with a forged signature (Stripe, Mercado Pago, PayPal): does it mark the order paid? | 3 |
 | `revisar-access.py` | Cloudflare Access policies that actually let anyone in (Include with PIN, Everyone, gmail.com…) | 0 (reads config) |
 | `reverificar.py` | After fixing: re-runs each finding's reproduction (`evidencia/repro/`) and builds a before → now table | the repro's |

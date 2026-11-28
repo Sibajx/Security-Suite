@@ -99,7 +99,7 @@ def main():
         omitidos = [x for x in ("infra-secretos", "acceso", "entradas") if x not in por_agente]
         if omitidos:
             L.append(f"- Sin cambios en su área (se heredan sus resultados): {', '.join(omitidos)}")
-        L += ["", f"Chequeos afectados: {', '.join(sorted(chequeos, key=lambda x: (x[0] == 'X', int(re.match(r'X?(\\d+)', x).group(1)) if re.match(r'X?\\d', x) else 99, x))) or '—'}.",
+        L += ["", f"Chequeos afectados: {', '.join(sorted(chequeos, key=lambda x: (x[0] == 'X', int(re.match(r'X?(\d+)', x).group(1)) if re.match(r'X?\d', x) else 99, x))) or '—'}.",
               "Los demás estados se **heredan** del reporte base y se marcan «heredado (fecha)» en la tabla."]
     texto = "\n".join(L) + "\n"
     if a.salida:

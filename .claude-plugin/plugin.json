@@ -1,7 +1,7 @@
 {
   "name": "security-suite",
   "description": "Suite de ciberseguridad full stack: auditoría de código, secretos (incluido el historial de git), dependencias, chequeos en vivo y pentest autorizado, con diagnóstico y mejores implementaciones.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": { "name": "Sibajx" },
   "repository": "https://github.com/Sibajx/Security-Suite",
   "license": "MIT",

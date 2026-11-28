@@ -19,11 +19,11 @@ diagnóstico con veredicto, puntaje y las mejores implementaciones para tu stack
 ## Qué revisa
 
 Los **20 chequeos** de [`SecurityChecks.md`](skills/security-suite/SecurityChecks.md), cada uno con severidad fija,
-más 12 extras de nivel senior:
+más 13 extras de nivel senior:
 
 | Secretos | Acceso | Entradas | Infra | Extras |
 |---|---|---|---|---|
-| 1 API keys ocultas · 2 variables de entorno · 3 keys en git (historial) | 4 ruta admin · 5 auth · 6 permisos/IDOR · 10 reglas DB · 11 rate limiting · 12 límite de gasto | 7 validación · 8 XSS · 9 SQL injection · 13 subidas · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 config de producción | SSRF · deserialización/RCE · path traversal · lógica de negocio · CI/CD · registro y monitoreo · subdominios · correo/DNS · políticas de Cloudflare Access · **webhooks de pago** · **chatbots y LLM** · **respaldos contra ransomware** |
+| 1 API keys ocultas · 2 variables de entorno · 3 keys en git (historial) | 4 ruta admin · 5 auth · 6 permisos/IDOR · 10 reglas DB · 11 rate limiting · 12 límite de gasto | 7 validación · 8 XSS · 9 SQL injection · 13 subidas · 14 CSRF · 15 CORS · 18 cookies | 16 HTTPS · 17 headers · 19 debug · 20 config de producción | SSRF · deserialización/RCE · path traversal · lógica de negocio · CI/CD · registro y monitoreo · subdominios · correo/DNS · políticas de Cloudflare Access · **webhooks de pago** · **chatbots y LLM** · **respaldos contra ransomware** · **GraphQL** |
 
 ## Instalación
 
@@ -88,6 +88,7 @@ Cada corrida agrega una fecha nueva, así ves si el sitio mejoró.
 | `grabar-flujo.py` + `flujo.py` | Graba un flujo con Playwright y prueba saltar pasos, repetir el último, hacerlo sin empezar | 3 |
 | `fuzz-api.sh` | Fuzzing de la API desde su OpenAPI (Schemathesis); solo local/staging | 3 |
 | `supabase-rls.py` | Supabase/Firebase: tablas sin RLS, `using (true)`, rol desde `user_metadata`, service_role pública; en vivo solo **cuenta** filas (HEAD, sin descargar datos) | 0–2 |
+| `graphql-revisar.py` | GraphQL: introspección abierta, sin límite de profundidad, playground; en vivo manda una introspección y una consulta anidada benigna, sin extraer datos | 0–2 |
 | `webhook-falso.py` | Manda tu webhook de pago sin firma y con firma falsa (Stripe, Mercado Pago, PayPal): ¿lo marca como pagado? | 3 |
 | `revisar-access.py` | Políticas de Cloudflare Access que en realidad dejan entrar a cualquiera (Include con PIN, Everyone, gmail.com…) | 0 (lee la config) |
 | `reverificar.py` | Después de arreglar: vuelve a correr la reproducción de cada hallazgo (`evidencia/repro/`) y arma la tabla antes → ahora | el del repro |

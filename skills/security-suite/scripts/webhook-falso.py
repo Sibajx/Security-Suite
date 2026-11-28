@@ -85,7 +85,10 @@ def main():
     if a.nivel < 3 or not a.cuenta_de_prueba:
         print("Esto puede marcar un pedido como pagado: requiere --nivel 3 y --cuenta-de-prueba (pedido pentest-*).", file=sys.stderr)
         sys.exit(2)
-    cuerpo = open(a.datos, "rb").read()
+    try:
+        cuerpo = open(a.datos, "rb").read()
+    except OSError as e:
+        print(f"No se pudo leer --datos {a.datos}: {e}", file=sys.stderr); sys.exit(2)
     base = {"User-Agent": UA, "Content-Type": "application/json"}
     for h in a.header:
         k, _, v = h.partition(":")
